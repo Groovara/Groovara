@@ -11,7 +11,7 @@ export default function InlineNotice({ kind = "info", title, message }: Props) {
     "rounded-xl border px-4 py-3 text-sm backdrop-blur-md";
   const styles =
     kind === "error"
-      ? "border-red-700/25 bg-red-500/10 text-red-700 dark:border-red-400/20 dark:text-red-200"
+      ? "border-gv-cherry/25 bg-gv-cherry/10 text-gv-cherry dark:border-gv-cherry/20 dark:text-gv-cream"
       : "border-border bg-card/70 text-muted-foreground";
 
   return (

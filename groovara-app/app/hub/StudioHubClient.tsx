@@ -704,7 +704,7 @@ export default function StudioHubClient() {
               onClick={() => setActionMenuOpen((open) => !open)}
               aria-haspopup="menu"
               aria-expanded={actionMenuOpen}
-              className="inline-flex min-h-11 items-center gap-3 rounded-full border border-[#57577F]/35 bg-[#57577F] px-5 py-2.5 text-[11px] font-semibold tracking-[0.18em] text-[#fff8ec] shadow-[0_10px_26px_rgba(87,87,127,0.22)] transition hover:-translate-y-0.5 hover:bg-[#49496d] hover:shadow-[0_14px_30px_rgba(87,87,127,0.28)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#57577F]/40 dark:border-[#CED7DF]/20 dark:bg-[#57577F] dark:text-white dark:hover:bg-[#66668f] dark:focus-visible:ring-[#CED7DF]/40"
+              className="inline-flex min-h-11 items-center gap-3 rounded-full border border-[#2A3170]/35 bg-[#2A3170] px-5 py-2.5 text-[11px] font-semibold tracking-[0.18em] text-[#F0E9DA] shadow-[0_10px_26px_rgba(87,87,127,0.22)] transition hover:-translate-y-0.5 hover:bg-[#1F2860] hover:shadow-[0_14px_30px_rgba(87,87,127,0.28)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3170]/40 dark:border-[#B4B8C0]/20 dark:bg-[#2A3170] dark:text-white dark:hover:bg-[#3B458F] dark:focus-visible:ring-[#B4B8C0]/40"
             >
               NEW MIXLIST
               <span
@@ -720,7 +720,7 @@ export default function StudioHubClient() {
             {actionMenuOpen ? (
               <div
                 role="menu"
-                className="absolute left-0 top-full z-30 mt-3 w-56 overflow-hidden rounded-2xl border border-[#cfc3ad] bg-[#fff8ec]/98 p-2 text-[#292521] shadow-[0_18px_42px_rgba(64,47,31,0.18)] backdrop-blur-xl dark:border-white/10 dark:bg-[#111113]/98 dark:text-white dark:shadow-[0_18px_42px_rgba(0,0,0,0.42)]"
+                className="absolute left-0 top-full z-30 mt-3 w-56 overflow-hidden rounded-2xl border border-[#B4B8C0] bg-[#F0E9DA]/98 p-2 text-[#1A1A23] shadow-[0_18px_42px_rgba(64,47,31,0.18)] backdrop-blur-xl dark:border-white/10 dark:bg-[#1A1A23]/98 dark:text-white dark:shadow-[0_18px_42px_rgba(0,0,0,0.42)]"
               >
                 <Link
                   href="/tracklists/new"
@@ -731,12 +731,12 @@ export default function StudioHubClient() {
                       source: "studio_action_menu",
                     });
                   }}
-                  className="block rounded-xl px-4 py-3 transition hover:bg-[#57577F]/10 hover:text-[#3f3f63] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#57577F]/30 dark:hover:bg-white/10 dark:hover:text-[#CED7DF] dark:focus-visible:ring-[#CED7DF]/30"
+                  className="block rounded-xl px-4 py-3 transition hover:bg-[#2A3170]/10 hover:text-[#1F2860] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3170]/30 dark:hover:bg-white/10 dark:hover:text-[#B4B8C0] dark:focus-visible:ring-[#B4B8C0]/30"
                 >
                   <span className="block text-sm font-semibold tracking-[0.04em]">
                     Create
                   </span>
-                  <span className="mt-1 block text-xs leading-snug text-[#6b635b] dark:text-white/45">
+                  <span className="mt-1 block text-xs leading-snug text-[#5C6070] dark:text-white/45">
                     Start a blank Studio draft.
                   </span>
                 </Link>
@@ -751,12 +751,12 @@ export default function StudioHubClient() {
                       source: "studio_action_menu",
                     });
                   }}
-                  className="mt-1 block w-full rounded-xl px-4 py-3 text-left transition hover:bg-[#57577F]/10 hover:text-[#3f3f63] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#57577F]/30 dark:hover:bg-white/10 dark:hover:text-[#CED7DF] dark:focus-visible:ring-[#CED7DF]/30"
+                  className="mt-1 block w-full rounded-xl px-4 py-3 text-left transition hover:bg-[#2A3170]/10 hover:text-[#1F2860] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3170]/30 dark:hover:bg-white/10 dark:hover:text-[#B4B8C0] dark:focus-visible:ring-[#B4B8C0]/30"
                 >
                   <span className="block text-sm font-semibold tracking-[0.04em]">
                     Import
                   </span>
-                  <span className="mt-1 block text-xs leading-snug text-[#6b635b] dark:text-white/45">
+                  <span className="mt-1 block text-xs leading-snug text-[#5C6070] dark:text-white/45">
                     Bring in a public playlist.
                   </span>
                 </button>
@@ -785,12 +785,12 @@ export default function StudioHubClient() {
                 onClick={() => handleSectionChange(section)}
                 className={`group relative min-h-28 overflow-hidden px-4 py-6 text-left transition sm:text-center ${
                   active
-                    ? "text-[#302b31] dark:text-[#f4eef7]"
-                    : "text-[#7b746c] hover:text-[#57577F] dark:text-white/45 dark:hover:text-[#CED7DF]"
+                    ? "text-[#1A1A23] dark:text-[#F0E9DA]"
+                    : "text-[#6C7180] hover:text-[#2A3170] dark:text-white/45 dark:hover:text-[#B4B8C0]"
                 }`}
               >
                 {active ? (
-                  <GroovaraRingMark className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 bg-[#57577F]/[0.055] dark:bg-[#CED7DF]/[0.05]" />
+                  <GroovaraRingMark className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 bg-[#2A3170]/[0.055] dark:bg-[#B4B8C0]/[0.05]" />
                 ) : null}
 
                 <span className="relative block text-xl font-medium tracking-[0.08em] sm:text-2xl">
@@ -822,13 +822,13 @@ export default function StudioHubClient() {
 
         {!loading && !err ? (
           <section className="relative mx-auto mt-16 max-w-3xl">
-            <GroovaraRingMark className="absolute -left-52 -top-28 hidden h-72 w-72 bg-[#57577F]/[0.04] lg:block dark:bg-[#CED7DF]/[0.035]" />
+            <GroovaraRingMark className="absolute -left-52 -top-28 hidden h-72 w-72 bg-[#2A3170]/[0.04] lg:block dark:bg-[#B4B8C0]/[0.035]" />
 
             <div className="relative">
-              <h1 className="text-3xl font-medium tracking-[0.08em] text-[#302b31] dark:text-[#f4eef7] sm:text-4xl">
+              <h1 className="text-3xl font-medium tracking-[0.08em] text-[#1A1A23] dark:text-[#F0E9DA] sm:text-4xl">
                 {sectionTitle}
               </h1>
-              <p className="mt-2 text-[10px] tracking-[0.25em] text-[#6b635b] dark:text-white/45">
+              <p className="mt-2 text-[10px] tracking-[0.25em] text-[#5C6070] dark:text-white/45">
                 {renderCount(currentCount)}
               </p>
 
@@ -859,10 +859,10 @@ export default function StudioHubClient() {
                             }
                             className="min-w-0 flex-1"
                           >
-                            <h2 className="truncate text-xl font-medium text-[#292521] transition group-hover:text-[#57577F] dark:text-white/90 dark:group-hover:text-[#CED7DF] sm:text-2xl">
+                            <h2 className="truncate text-xl font-medium text-[#1A1A23] transition group-hover:text-[#2A3170] dark:text-white/90 dark:group-hover:text-[#B4B8C0] sm:text-2xl">
                               {tracklist.title}
                             </h2>
-                            <p className="mt-1.5 text-xs tracking-[0.02em] text-[#6b635b] dark:text-white/45">
+                            <p className="mt-1.5 text-xs tracking-[0.02em] text-[#5C6070] dark:text-white/45">
                               {metadataLine([
                                 formatCount(counts.songs, "song"),
                                 counts.notes === 0
@@ -873,7 +873,7 @@ export default function StudioHubClient() {
                               ])}
                             </p>
                             {tracklist.description ? (
-                              <p className="mt-2 line-clamp-1 text-sm text-[#6b635b] dark:text-white/45">
+                              <p className="mt-2 line-clamp-1 text-sm text-[#5C6070] dark:text-white/45">
                                 {tracklist.description}
                               </p>
                             ) : null}
@@ -882,7 +882,7 @@ export default function StudioHubClient() {
                           <button
                             type="button"
                             onClick={() => remove(tracklist.id)}
-                            className="mt-1 text-[10px] tracking-[0.18em] text-[#8a8178] transition hover:text-red-700 dark:text-white/35 dark:hover:text-red-300"
+                            className="mt-1 text-[10px] tracking-[0.18em] text-[#7B808D] transition hover:text-gv-cherry dark:text-white/35 dark:hover:text-gv-cherry"
                           >
                             DELETE
                           </button>
@@ -915,10 +915,10 @@ export default function StudioHubClient() {
                             }
                             className="min-w-0 flex-1"
                           >
-                            <h2 className="truncate text-xl font-medium text-[#292521] transition group-hover:text-[#57577F] dark:text-white/90 dark:group-hover:text-[#CED7DF] sm:text-2xl">
+                            <h2 className="truncate text-xl font-medium text-[#1A1A23] transition group-hover:text-[#2A3170] dark:text-white/90 dark:group-hover:text-[#B4B8C0] sm:text-2xl">
                               {mixlist.title}
                             </h2>
-                            <p className="mt-1.5 text-xs tracking-[0.02em] text-[#6b635b] dark:text-white/45">
+                            <p className="mt-1.5 text-xs tracking-[0.02em] text-[#5C6070] dark:text-white/45">
                               {metadataLine([
                                 formatCount(counts.songs, "song"),
                                 counts.notes === 0
@@ -934,7 +934,7 @@ export default function StudioHubClient() {
                             type="button"
                             onClick={() => void removeSentFromList(mixlist.id)}
                             disabled={removingKey === `sent:${mixlist.id}`}
-                            className="mt-1 text-[10px] tracking-[0.18em] text-[#8a8178] transition hover:text-red-700 disabled:cursor-wait disabled:opacity-45 dark:text-white/35 dark:hover:text-red-300"
+                            className="mt-1 text-[10px] tracking-[0.18em] text-[#7B808D] transition hover:text-gv-cherry disabled:cursor-wait disabled:opacity-45 dark:text-white/35 dark:hover:text-gv-cherry"
                           >
                             {removingKey === `sent:${mixlist.id}`
                               ? "REMOVING…"
@@ -978,10 +978,10 @@ export default function StudioHubClient() {
                             }
                             className="min-w-0 flex-1"
                           >
-                            <h2 className="truncate text-xl font-medium text-[#292521] transition group-hover:text-[#57577F] dark:text-white/90 dark:group-hover:text-[#CED7DF] sm:text-2xl">
+                            <h2 className="truncate text-xl font-medium text-[#1A1A23] transition group-hover:text-[#2A3170] dark:text-white/90 dark:group-hover:text-[#B4B8C0] sm:text-2xl">
                               {mixlist.title}
                             </h2>
-                            <p className="mt-1.5 text-xs tracking-[0.02em] text-[#6b635b] dark:text-white/45">
+                            <p className="mt-1.5 text-xs tracking-[0.02em] text-[#5C6070] dark:text-white/45">
                               {metadataLine([
                                 formatCount(counts.songs, "song"),
                                 counts.notes === 0
@@ -999,7 +999,7 @@ export default function StudioHubClient() {
                               void removeReceivedFromList(mixlist.id)
                             }
                             disabled={removingKey === `received:${mixlist.id}`}
-                            className="mt-1 text-[10px] tracking-[0.18em] text-[#8a8178] transition hover:text-red-700 disabled:cursor-wait disabled:opacity-45 dark:text-white/35 dark:hover:text-red-300"
+                            className="mt-1 text-[10px] tracking-[0.18em] text-[#7B808D] transition hover:text-gv-cherry disabled:cursor-wait disabled:opacity-45 dark:text-white/35 dark:hover:text-gv-cherry"
                           >
                             {removingKey === `received:${mixlist.id}`
                               ? "REMOVING…"
@@ -1012,7 +1012,7 @@ export default function StudioHubClient() {
               </div>
 
               {currentCount === 0 ? (
-                <div className="border-b border-[#6a6258]/18 py-10 text-sm text-[#7b746c] dark:border-white/[0.08] dark:text-white/40">
+                <div className="border-b border-[#6a6258]/18 py-10 text-sm text-[#6C7180] dark:border-white/[0.08] dark:text-white/40">
                   Nothing here yet.
                 </div>
               ) : null}
@@ -1020,7 +1020,7 @@ export default function StudioHubClient() {
               <button
                 type="button"
                 onClick={() => void load()}
-                className="mt-8 text-[10px] tracking-[0.2em] text-[#7b746c] transition hover:text-[#57577F] dark:text-white/35 dark:hover:text-[#CED7DF]"
+                className="mt-8 text-[10px] tracking-[0.2em] text-[#6C7180] transition hover:text-[#2A3170] dark:text-white/35 dark:hover:text-[#B4B8C0]"
               >
                 REFRESH
               </button>
@@ -1030,16 +1030,16 @@ export default function StudioHubClient() {
 
         {importOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
-            <div className="w-full max-w-xl rounded-3xl border border-[#d1c6b3] bg-[#fff8ec] p-6 text-[#292521] shadow-2xl dark:border-white/10 dark:bg-[#111113] dark:text-white">
+            <div className="w-full max-w-xl rounded-3xl border border-[#B4B8C0] bg-[#F0E9DA] p-6 text-[#1A1A23] shadow-2xl dark:border-white/10 dark:bg-[#1A1A23] dark:text-white">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs tracking-[0.2em] text-[#6b635b] dark:text-white/45">
+                  <p className="text-xs tracking-[0.2em] text-[#5C6070] dark:text-white/45">
                     IMPORT PLAYLIST
                   </p>
                   <h3 className="mt-2 text-xl font-medium">
                     Choose a platform
                   </h3>
-                  <p className="mt-2 text-sm text-[#6b635b] dark:text-white/45">
+                  <p className="mt-2 text-sm text-[#5C6070] dark:text-white/45">
                     {IMPORT_PLATFORM_COPY[importPlatform].helper}
                   </p>
                 </div>
@@ -1051,7 +1051,7 @@ export default function StudioHubClient() {
                     setImportOpen(false);
                     setImportErr(null);
                   }}
-                  className="text-xs tracking-[0.18em] text-[#6b635b] transition hover:text-[#57577F] dark:text-white/45 dark:hover:text-[#CED7DF]"
+                  className="text-xs tracking-[0.18em] text-[#5C6070] transition hover:text-[#2A3170] dark:text-white/45 dark:hover:text-[#B4B8C0]"
                 >
                   CLOSE
                 </button>
@@ -1059,7 +1059,7 @@ export default function StudioHubClient() {
 
               <div className="mt-5 grid gap-4">
                 <label className="block">
-                  <span className="block text-xs tracking-[0.18em] text-[#6b635b] dark:text-white/45">
+                  <span className="block text-xs tracking-[0.18em] text-[#5C6070] dark:text-white/45">
                     PLATFORM
                   </span>
                   <select
@@ -1069,7 +1069,7 @@ export default function StudioHubClient() {
                       setImportErr(null);
                     }}
                     disabled={importBusy}
-                    className="mt-2 w-full rounded-xl border border-[#57577F]/25 bg-[#57577F] px-4 py-3 text-sm font-semibold tracking-[0.08em] text-[#fff8ec] outline-none transition hover:bg-[#4b4b73] focus:border-[#57577F]/55 disabled:cursor-wait disabled:opacity-60 dark:border-[#CED7DF]/20 dark:bg-[#57577F] dark:text-white dark:hover:bg-[#66668f] dark:focus:border-[#CED7DF]/40"
+                    className="mt-2 w-full rounded-xl border border-[#2A3170]/25 bg-[#2A3170] px-4 py-3 text-sm font-semibold tracking-[0.08em] text-[#F0E9DA] outline-none transition hover:bg-[#1F2860] focus:border-[#2A3170]/55 disabled:cursor-wait disabled:opacity-60 dark:border-[#B4B8C0]/20 dark:bg-[#2A3170] dark:text-white dark:hover:bg-[#3B458F] dark:focus:border-[#B4B8C0]/40"
                   >
                     <option value="spotify">Spotify</option>
                     <option value="youtube">YouTube</option>
@@ -1078,7 +1078,7 @@ export default function StudioHubClient() {
                 </label>
 
                 <label className="block">
-                  <span className="block text-xs tracking-[0.18em] text-[#6b635b] dark:text-white/45">
+                  <span className="block text-xs tracking-[0.18em] text-[#5C6070] dark:text-white/45">
                     PLAYLIST URL
                   </span>
                   <input
@@ -1089,7 +1089,7 @@ export default function StudioHubClient() {
                       importBusy ||
                       Boolean(IMPORT_PLATFORM_COPY[importPlatform].disabled)
                     }
-                    className="mt-2 w-full rounded-xl border border-[#cfc3ad] bg-white/55 px-4 py-3 text-[#292521] outline-none transition focus:border-[#57577F]/55 disabled:cursor-not-allowed disabled:opacity-55 dark:border-white/10 dark:bg-black/20 dark:text-white dark:focus:border-[#CED7DF]/40"
+                    className="mt-2 w-full rounded-xl border border-[#B4B8C0] bg-white/55 px-4 py-3 text-[#1A1A23] outline-none transition focus:border-[#2A3170]/55 disabled:cursor-not-allowed disabled:opacity-55 dark:border-white/10 dark:bg-black/20 dark:text-white dark:focus:border-[#B4B8C0]/40"
                   />
                 </label>
               </div>
@@ -1112,7 +1112,7 @@ export default function StudioHubClient() {
                     importBusy ||
                     Boolean(IMPORT_PLATFORM_COPY[importPlatform].disabled)
                   }
-                  className="rounded-full border border-[#57577F]/35 bg-[#57577F] px-6 py-3 text-xs font-semibold tracking-[0.18em] text-[#fff8ec] transition hover:bg-[#49496d] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#CED7DF]/20 dark:bg-[#57577F] dark:text-white dark:hover:bg-[#66668f]"
+                  className="rounded-full border border-[#2A3170]/35 bg-[#2A3170] px-6 py-3 text-xs font-semibold tracking-[0.18em] text-[#F0E9DA] transition hover:bg-[#1F2860] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#B4B8C0]/20 dark:bg-[#2A3170] dark:text-white dark:hover:bg-[#3B458F]"
                 >
                   {importBusy
                     ? "IMPORTING…"
@@ -1121,7 +1121,7 @@ export default function StudioHubClient() {
                       : "IMPORT"}
                 </button>
 
-                <span className="text-xs tracking-[0.12em] text-[#7b746c] dark:text-white/35">
+                <span className="text-xs tracking-[0.12em] text-[#6C7180] dark:text-white/35">
                   Public playlists work best right now.
                 </span>
               </div>

@@ -8,40 +8,52 @@
 */
 
 :root {
-  /* Groovara 2026 palette */
-  --brand-plum: #5B4B6E;
-  --brand-parchment: #E8DDC3;
-  --brand-warm-ink: #292923;
-  --brand-blue-green: #657681;
-  --brand-pale-paper: #F4EDDD;
-  --brand-putty: #C8BCA2;
-  --brand-sage: #85866A;
-  --brand-brick: #A83B2C;
-  --brand-deep-ink: #1B1B19;
-
   /*
-    Keep the original Groovara contrast hierarchy.
-    The new palette is strongest in backgrounds/surfaces and branding;
-    supporting accents stay supporting accents.
+    Groovara — Roadside Diner palette
+    Primary: Neon Dusk Indigo
+    Deep: Grease Ink
+    Ground: Napkin White
+    Accents: Cherry Vinyl + Formica Turquoise
+    Neutral: Chrome Smoke
+    Dark UI/shadows: Lowcountry Vat
   */
-  --background: var(--brand-parchment);
-  --foreground: var(--brand-warm-ink);
+  --brand-indigo: #2A3170;
+  --brand-grease-ink: #1A1A23;
+  --brand-napkin-white: #F0E9DA;
+  --brand-cherry-vinyl: #BE3943;
+  --brand-formica-turquoise: #58A6A1;
+  --brand-chrome-smoke: #B4B8C0;
+  --brand-lowcountry-vat: #1F2860;
 
-  --card: var(--brand-pale-paper);
-  --card-foreground: var(--brand-warm-ink);
+  /* Compatibility aliases for existing components while the UI migrates. */
+  --brand-plum: var(--brand-indigo);
+  --brand-parchment: var(--brand-napkin-white);
+  --brand-warm-ink: var(--brand-grease-ink);
+  --brand-blue-green: var(--brand-formica-turquoise);
+  --brand-pale-paper: var(--brand-napkin-white);
+  --brand-putty: var(--brand-chrome-smoke);
+  --brand-sage: var(--brand-formica-turquoise);
+  --brand-brick: var(--brand-cherry-vinyl);
+  --brand-deep-ink: var(--brand-grease-ink);
 
-  --muted: #EFE6D5;
-  --muted-foreground: #5F5A50;
+  --background: var(--brand-napkin-white);
+  --foreground: var(--brand-grease-ink);
 
-  --border: var(--brand-putty);
-  --input: var(--brand-putty);
-  --ring: var(--brand-blue-green);
+  --card: var(--brand-napkin-white);
+  --card-foreground: var(--brand-grease-ink);
 
-  --accent: var(--brand-warm-ink);
-  --accent-foreground: var(--brand-pale-paper);
+  --muted: color-mix(in srgb, var(--brand-napkin-white) 82%, var(--brand-chrome-smoke) 18%);
+  --muted-foreground: #555867;
 
-  --studio-track: var(--brand-pale-paper);
-  --studio-mix: #EFE4CF;
+  --border: var(--brand-chrome-smoke);
+  --input: var(--brand-chrome-smoke);
+  --ring: var(--brand-formica-turquoise);
+
+  --accent: var(--brand-indigo);
+  --accent-foreground: var(--brand-napkin-white);
+
+  --studio-track: var(--brand-napkin-white);
+  --studio-mix: color-mix(in srgb, var(--brand-napkin-white) 82%, var(--brand-chrome-smoke) 18%);
 }
 
 @theme inline {
@@ -61,6 +73,14 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
 
+  --color-gv-indigo: var(--brand-indigo);
+  --color-gv-ink: var(--brand-grease-ink);
+  --color-gv-cream: var(--brand-napkin-white);
+  --color-gv-cherry: var(--brand-cherry-vinyl);
+  --color-gv-turquoise: var(--brand-formica-turquoise);
+  --color-gv-chrome: var(--brand-chrome-smoke);
+  --color-gv-vat: var(--brand-lowcountry-vat);
+
   --color-studio-track: var(--studio-track);
   --color-studio-mix: var(--studio-mix);
 
@@ -69,47 +89,47 @@
 }
 
 html.light {
-  --background: #E8DDC3;
-  --foreground: #292923;
+  --background: #F0E9DA;
+  --foreground: #1A1A23;
 
-  --card: #F4EDDD;
-  --card-foreground: #292923;
+  --card: #F0E9DA;
+  --card-foreground: #1A1A23;
 
-  --muted: #EFE6D5;
-  --muted-foreground: #5F5A50;
+  --muted: color-mix(in srgb, #F0E9DA 82%, #B4B8C0 18%);
+  --muted-foreground: #555867;
 
-  --border: #C8BCA2;
-  --input: #C8BCA2;
-  --ring: #657681;
+  --border: #B4B8C0;
+  --input: #B4B8C0;
+  --ring: #58A6A1;
 
-  --accent: #292923;
-  --accent-foreground: #F4EDDD;
+  --accent: #2A3170;
+  --accent-foreground: #F0E9DA;
 
-  --studio-track: #F4EDDD;
-  --studio-mix: #EFE4CF;
+  --studio-track: #F0E9DA;
+  --studio-mix: color-mix(in srgb, #F0E9DA 82%, #B4B8C0 18%);
 
   color-scheme: light;
 }
 
 html.dark {
-  --background: #1B1B19;
-  --foreground: #F4EDDD;
+  --background: #1A1A23;
+  --foreground: #F0E9DA;
 
-  --card: #292923;
-  --card-foreground: #F4EDDD;
+  --card: #1F2860;
+  --card-foreground: #F0E9DA;
 
-  --muted: #252522;
-  --muted-foreground: #C8BCA2;
+  --muted: color-mix(in srgb, #1A1A23 68%, #1F2860 32%);
+  --muted-foreground: #B4B8C0;
 
-  --border: #3C3C37;
-  --input: #3C3C37;
-  --ring: #657681;
+  --border: color-mix(in srgb, #B4B8C0 32%, #1A1A23 68%);
+  --input: color-mix(in srgb, #B4B8C0 32%, #1A1A23 68%);
+  --ring: #58A6A1;
 
-  --accent: #F4EDDD;
-  --accent-foreground: #1B1B19;
+  --accent: #58A6A1;
+  --accent-foreground: #1A1A23;
 
-  --studio-track: #242421;
-  --studio-mix: #262522;
+  --studio-track: color-mix(in srgb, #1A1A23 72%, #1F2860 28%);
+  --studio-mix: #1F2860;
 
   color-scheme: dark;
 }
@@ -190,7 +210,7 @@ html.dark .gv-panel-shadow {
 .gv-nav-surface {
   position: relative; /* needed for ::after grain layer */
     overflow: visible;
-    background: color-mix(in srgb, #E8DDC3 88%, white 12%);
+    background: color-mix(in srgb, #F0E9DA 88%, white 12%);
     border-bottom: 1px solid rgba(216, 207, 191, 0.78);
     box-shadow: 0 2px 18px rgba(64, 47, 31, 0.06);
     backdrop-filter: blur(10px);
@@ -199,7 +219,7 @@ html.dark .gv-panel-shadow {
 
 /* light mode: grainy cream strip + hairline edge */
 html.light .gv-nav-surface {
-  background: rgba(232, 221, 195, 0.90); /* Warm Parchment */
+  background: rgba(240, 233, 218, 0.92); /* Warm Parchment */
   border-bottom: 1px solid rgba(214, 206, 191, 0.75);
   backdrop-filter: blur(10px);
 }
@@ -221,7 +241,7 @@ html.light .gv-nav-surface::after {
 
 /* dark mode: keep the existing vibe */
 html.dark .gv-nav-surface {
-  background: rgba(27, 27, 25, 0.90);
+  background: rgba(26, 26, 35, 0.92);
   border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(10px);
 }
@@ -323,19 +343,19 @@ html.dark .gv-paper-bg::after {
 /* Groovara accent text color */
 
 .gv-accent {
-  color: #5B4B6E; /* Plum — primary brand accent */
+  color: #2A3170; /* Plum — primary brand accent */
 }
 
 .gv-accent:hover {
-  color: #493B59;
+  color: #1F2860;
 }
 
 html.dark .gv-accent {
-  color: color-mix(in srgb, #5B4B6E 42%, #F4EDDD 58%);
+  color: color-mix(in srgb, #2A3170 42%, #F0E9DA 58%);
 }
 
 html.dark .gv-accent:hover {
-  color: #F4EDDD;
+  color: #F0E9DA;
 }
 
 /* -------------------------------
@@ -345,7 +365,7 @@ html.dark .gv-accent:hover {
 
 .gv-row {
   /* light mode: paper panel */
-  background: rgba(244, 237, 221, 0.82);
+  background: rgba(240, 233, 218, 0.86);
   border: 1px solid rgba(200, 188, 162, 0.70);
   box-shadow: 0 10px 22px rgba(40, 30, 20, 0.10);
   backdrop-filter: blur(8px);
@@ -353,14 +373,14 @@ html.dark .gv-accent:hover {
 
 html.dark .gv-row {
   /* dark mode: soft charcoal, not pitch black */
-  background: rgba(41, 41, 35, 0.74);
+  background: rgba(31, 40, 96, 0.46);
   border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: 0 18px 34px rgba(0, 0, 0, 0.45);
 }
 
 /* Primary text inside rows */
 .gv-row-text {
-  color: #292923; /* Warm Ink */
+  color: #1A1A23; /* Warm Ink */
 }
 
 html.dark .gv-row-text {
@@ -369,11 +389,11 @@ html.dark .gv-row-text {
 
 /* Secondary/meta text inside rows (artist, album, platform, etc.) */
 .gv-row-subtext {
-  color: rgba(41, 41, 35, 0.72); /* readable Warm Ink subtext */
+  color: rgba(26, 26, 35, 0.72); /* readable Warm Ink subtext */
 }
 
 html.dark .gv-row-subtext {
-  color: rgba(200, 188, 162, 0.88); /* Putty */
+  color: rgba(180, 184, 192, 0.88); /* Putty */
 }
 
 /* -------------------------------
@@ -383,7 +403,7 @@ html.dark .gv-row-subtext {
 
 .gv-row {
   /* light mode: paper panel */
-  background: rgba(244, 237, 221, 0.82);
+  background: rgba(240, 233, 218, 0.86);
   border: 1px solid rgba(200, 188, 162, 0.70);
   box-shadow: 0 10px 22px rgba(40, 30, 20, 0.10);
   backdrop-filter: blur(8px);
@@ -391,14 +411,14 @@ html.dark .gv-row-subtext {
 
 html.dark .gv-row {
   /* dark mode: soft charcoal, not pitch black */
-  background: rgba(41, 41, 35, 0.74);
+  background: rgba(31, 40, 96, 0.46);
   border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: 0 18px 34px rgba(0, 0, 0, 0.45);
 }
 
 /* Primary text inside rows */
 .gv-row-text {
-  color: #292923; /* Warm Ink */
+  color: #1A1A23; /* Warm Ink */
 }
 
 html.dark .gv-row-text {
@@ -407,11 +427,11 @@ html.dark .gv-row-text {
 
 /* Secondary/meta text inside rows (artist, album, platform, etc.) */
 .gv-row-subtext {
-  color: rgba(41, 41, 35, 0.72); /* readable Warm Ink subtext */
+  color: rgba(26, 26, 35, 0.72); /* readable Warm Ink subtext */
 }
 
 html.dark .gv-row-subtext {
-  color: rgba(200, 188, 162, 0.88); /* Putty */
+  color: rgba(180, 184, 192, 0.88); /* Putty */
 }
 
 /* -------------------------------

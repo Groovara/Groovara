@@ -1021,7 +1021,7 @@ export default function TracklistDetailPage() {
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-2 w-full rounded-xl border gv-row border-white/10 bg-white/5 px-4 py-3 text-gv-accent outline-none focus:border-purple-500/40"
+              className="mt-2 w-full rounded-xl border gv-row border-white/10 bg-white/5 px-4 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
             />
           </div>
 
@@ -1043,7 +1043,7 @@ export default function TracklistDetailPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={DESCRIPTION_LIMIT}
-              className="mt-2 w-full rounded-xl border gv-row border-white/10 bg-white/5 px-4 py-3 text-gv-accent outline-none focus:border-purple-500/40"
+              className="mt-2 w-full rounded-xl border gv-row border-white/10 bg-white/5 px-4 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
               rows={5}
             />
 
@@ -1054,14 +1054,14 @@ export default function TracklistDetailPage() {
             <button
               onClick={save}
               disabled={saving}
-              className="rounded-full border border-purple-500/40 bg-purple-500/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-purple-500/20 transition disabled:opacity-50"
+              className="rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-gv-indigo/20 transition disabled:opacity-50"
             >
               {saving ? "SAVING…" : "SAVE DRAFT"}
             </button>
 
             <Link
               href="/tracklists"
-              className="px-2 text-xs tracking-widest text-gray-400 transition hover:text-purple-300"
+              className="px-2 text-xs tracking-widest text-gray-400 transition hover:text-gv-turquoise"
             >
               ← BACK
             </Link>
@@ -1070,7 +1070,7 @@ export default function TracklistDetailPage() {
               type="button"
               onClick={remove}
               disabled={busy}
-              className="rounded-full border border-red-500/45 bg-red-500/10 px-5 py-3 text-xs tracking-widest text-red-700 transition hover:border-red-500/70 hover:bg-red-500/20 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-300 dark:hover:text-red-200"
+              className="rounded-full border border-gv-cherry/45 bg-gv-cherry/10 px-5 py-3 text-xs tracking-widest text-gv-cherry transition hover:border-gv-cherry/70 hover:bg-gv-cherry/20 hover:text-gv-cherry disabled:cursor-not-allowed disabled:opacity-50 dark:text-gv-cherry dark:hover:text-gv-cream"
             >
               DELETE DRAFT
             </button>
@@ -1084,7 +1084,7 @@ export default function TracklistDetailPage() {
             onClick={() =>
               multiNoteMode ? exitMultiNoteMode() : setMultiNoteMode(true)
             }
-            className="rounded-full border border-purple-500/30 bg-purple-500/10 px-5 py-2 text-xs tracking-widest text-gv-accent hover:bg-purple-500/20 transition"
+            className="rounded-full border border-gv-indigo/30 bg-gv-indigo/10 px-5 py-2 text-xs tracking-widest text-gv-accent hover:bg-gv-indigo/20 transition"
           >
             {multiNoteMode ? "EXIT MULTI-NOTE" : "MULTI-NOTE MODE"}
           </button>
@@ -1109,7 +1109,7 @@ export default function TracklistDetailPage() {
 
               <button
                 onClick={exitMultiNoteMode}
-                className="text-xs tracking-widest text-gray-400 hover:text-purple-300 transition"
+                className="text-xs tracking-widest text-gray-400 hover:text-gv-turquoise transition"
               >
                 CLOSE
               </button>
@@ -1119,7 +1119,7 @@ export default function TracklistDetailPage() {
               value={multiNoteText}
               onChange={(e) => setMultiNoteText(e.target.value)}
               maxLength={SONG_NOTE_LIMIT}
-              className="mt-4 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#2d2533] dark:text-gray-100 outline-none focus:border-purple-500/40"
+              className="mt-4 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#1A1A23] dark:text-gray-100 outline-none focus:border-gv-indigo/40"
               rows={4}
               placeholder="Write a note to apply to the selected songs…"
             />
@@ -1130,7 +1130,7 @@ export default function TracklistDetailPage() {
               <button
                 onClick={applyNoteToSelected}
                 disabled={multiWorking || selectedCount === 0}
-                className="rounded-full border border-purple-500/40 bg-purple-500/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-purple-500/20 transition disabled:opacity-50"
+                className="rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-gv-indigo/20 transition disabled:opacity-50"
               >
                 {multiWorking ? "APPLYING…" : "APPLY NOTE"}
               </button>
@@ -1138,7 +1138,7 @@ export default function TracklistDetailPage() {
               <button
                 onClick={clearNoteForSelected}
                 disabled={multiWorking || selectedCount === 0}
-                className="rounded-full border border-red-500/30 bg-red-500/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-red-500/20 transition disabled:opacity-50"
+                className="rounded-full border border-gv-cherry/30 bg-gv-cherry/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-gv-cherry/20 transition disabled:opacity-50"
               >
                 {multiWorking ? "WORKING…" : "CLEAR NOTES"}
               </button>
@@ -1171,35 +1171,35 @@ export default function TracklistDetailPage() {
                 <input
                   value={mTitle}
                   onChange={(e) => setMTitle(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#2d2533] dark:text-gray-100 outline-none focus:border-purple-500/40"
+                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#1A1A23] dark:text-gray-100 outline-none focus:border-gv-indigo/40"
                   placeholder="Song title"
                 />
 
                 <input
                   value={mArtist}
                   onChange={(e) => setMArtist(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-gray-100 outline-none focus:border-purple-500/40"
+                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-gray-100 outline-none focus:border-gv-indigo/40"
                   placeholder="Artist"
                 />
 
                 <input
                   value={mAlbum}
                   onChange={(e) => setMAlbum(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-gray-100 outline-none focus:border-purple-500/40"
+                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-gray-100 outline-none focus:border-gv-indigo/40"
                   placeholder="Album (optional)"
                 />
 
                 <input
                   value={mUrl}
                   onChange={(e) => setMUrl(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-gray-100 outline-none focus:border-purple-500/40"
+                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-gray-100 outline-none focus:border-gv-indigo/40"
                   placeholder="Link (Spotify / YouTube / Apple Music / etc.)"
                 />
 
                 <button
                   onClick={addManual}
                   disabled={addingManual}
-                  className="mt-2 w-fit rounded-full border border-purple-500/40 bg-purple-500/10 px-6 py-3 text-xs tracking-widest text-purple-200 hover:bg-purple-500/20 transition disabled:opacity-50"
+                  className="mt-2 w-fit rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-6 py-3 text-xs tracking-widest text-gv-cream hover:bg-gv-indigo/20 transition disabled:opacity-50"
                 >
                   {addingManual ? "ADDING…" : "ADD SONG"}
                 </button>
@@ -1242,7 +1242,7 @@ export default function TracklistDetailPage() {
                           type="checkbox"
                           checked={selected}
                           onChange={() => toggleSelected(s.id)}
-                          className="h-4 w-4 accent-purple-400 flex-shrink-0"
+                          className="h-4 w-4 accent-gv-turquoise flex-shrink-0"
                         />
                       ) : null}
 
@@ -1264,7 +1264,7 @@ export default function TracklistDetailPage() {
                             aria-haspopup="menu"
                             aria-expanded={conversionMenuOpen}
                             title="Convert song"
-                            className="mr-0.5 grid h-7 w-5 place-items-center rounded-md text-[11px] text-gv-accent transition hover:bg-purple-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="mr-0.5 grid h-7 w-5 place-items-center rounded-md text-[11px] text-gv-accent transition hover:bg-gv-indigo/10 disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             {convertingThisSong ? "…" : "▾"}
                           </button>
@@ -1298,7 +1298,7 @@ export default function TracklistDetailPage() {
                                       platform.id,
                                     )
                                   }
-                                  className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs text-foreground transition hover:bg-purple-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                  className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs text-foreground transition hover:bg-gv-indigo/10 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                   <Image
                                     src={PLATFORM_ICONS[platform.id]}
@@ -1320,7 +1320,7 @@ export default function TracklistDetailPage() {
                         href={s.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="min-w-0 flex-1 transition hover:text-purple-700 dark:hover:text-purple-200"
+                        className="min-w-0 flex-1 transition hover:text-gv-vat dark:hover:text-gv-cream"
                       >
                         <p className="truncate text-sm text-foreground dark:text-gv-accent">
                           {s.position + 1}. {s.title}
@@ -1338,7 +1338,7 @@ export default function TracklistDetailPage() {
                         onClick={() =>
                           setExpandedNoteId(noteOpen ? null : s.id)
                         }
-                        className="text-xs tracking-widest text-gv-accent hover:text-purple-300 transition"
+                        className="text-xs tracking-widest text-gv-accent hover:text-gv-turquoise transition"
                         title="Song note"
                       >
                         NOTE {noteOpen ? "▴" : "▾"}
@@ -1347,7 +1347,7 @@ export default function TracklistDetailPage() {
 
                       <button
                         onClick={() => moveSong(s.id, "up")}
-                        className="text-xs tracking-widest text-gv-accent hover:text-purple-300 transition"
+                        className="text-xs tracking-widest text-gv-accent hover:text-gv-turquoise transition"
                         title="Move up"
                       >
                         ↑
@@ -1355,7 +1355,7 @@ export default function TracklistDetailPage() {
 
                       <button
                         onClick={() => moveSong(s.id, "down")}
-                        className="text-xs tracking-widest text-gv-accent hover:text-purple-300 transition"
+                        className="text-xs tracking-widest text-gv-accent hover:text-gv-turquoise transition"
                         title="Move down"
                       >
                         ↓
@@ -1363,7 +1363,7 @@ export default function TracklistDetailPage() {
 
                       <button
                         onClick={() => removeSong(s.id)}
-                        className="text-xs tracking-widest text-gv-accent hover:text-red-300 transition"
+                        className="text-xs tracking-widest text-gv-accent hover:text-gv-cherry transition"
                       >
                         REMOVE
                       </button>
@@ -1381,7 +1381,7 @@ export default function TracklistDetailPage() {
                           }))
                         }
                         maxLength={SONG_NOTE_LIMIT}
-                        className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-gray-100 outline-none focus:border-purple-500/40"
+                        className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-gray-100 outline-none focus:border-gv-indigo/40"
                         rows={3}
                         placeholder="What does this song mean to you?"
                       />
@@ -1395,7 +1395,7 @@ export default function TracklistDetailPage() {
                         <button
                           onClick={() => saveSingleNote(s.id)}
                           disabled={savingNoteId === s.id}
-                          className="rounded-full border border-purple-500/40 bg-purple-500/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-purple-500/20 transition disabled:opacity-50"
+                          className="rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-gv-indigo/20 transition disabled:opacity-50"
                         >
                           {savingNoteId === s.id ? "SAVING…" : "SAVE NOTE"}
                         </button>
@@ -1403,7 +1403,7 @@ export default function TracklistDetailPage() {
                         <button
                           onClick={() => clearSingleNote(s.id)}
                           disabled={savingNoteId === s.id}
-                          className="text-xs tracking-widest text-gv-accent hover:text-red-300 transition disabled:opacity-50"
+                          className="text-xs tracking-widest text-gv-accent hover:text-gv-cherry transition disabled:opacity-50"
                         >
                           CLEAR
                         </button>
@@ -1430,7 +1430,7 @@ export default function TracklistDetailPage() {
                   value={mixRecipient}
                   onChange={(e) => setMixRecipient(e.target.value)}
                   maxLength={120}
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#2d2533] outline-none focus:border-purple-500/40 dark:text-gray-100"
+                  className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#1A1A23] outline-none focus:border-gv-indigo/40 dark:text-gray-100"
                   placeholder="Recipient name"
                 />
               </div>
@@ -1443,7 +1443,7 @@ export default function TracklistDetailPage() {
                   value={mixSender}
                   onChange={(e) => setMixSender(e.target.value)}
                   maxLength={120}
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#2d2533] outline-none focus:border-purple-500/40 dark:text-gray-100"
+                  className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#1A1A23] outline-none focus:border-gv-indigo/40 dark:text-gray-100"
                   placeholder="Sender name"
                 />
               </div>
@@ -1454,7 +1454,7 @@ export default function TracklistDetailPage() {
               value={mixFinish}
               onChange={(e) => setMixFinish(e.target.value)}
               maxLength={FINISHING_NOTE_LIMIT}
-              className="mt-4 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#2d2533] dark:text-gray-100 outline-none focus:border-purple-500/40"
+              className="mt-4 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#1A1A23] dark:text-gray-100 outline-none focus:border-gv-indigo/40"
               rows={4}
               placeholder="Finishing note (only shown at the end)…"
             />
@@ -1466,7 +1466,7 @@ export default function TracklistDetailPage() {
                 type="checkbox"
                 checked={showRecipient}
                 onChange={(e) => setShowRecipient(e.target.checked)}
-                className="h-4 w-4 accent-purple-500"
+                className="h-4 w-4 accent-gv-indigo"
               />
               SHOW RECIPIENT (&quot;MIXLIST FOR …&quot;)
             </label>
@@ -1476,7 +1476,7 @@ export default function TracklistDetailPage() {
                 type="checkbox"
                 checked={showSender}
                 onChange={(e) => setShowSender(e.target.checked)}
-                className="h-4 w-4 accent-purple-500"
+                className="h-4 w-4 accent-gv-indigo"
               />
               SHOW SENDER (&quot;FROM …&quot;)
             </label>
@@ -1486,7 +1486,7 @@ export default function TracklistDetailPage() {
                 type="checkbox"
                 checked={showDate}
                 onChange={(e) => setShowDate(e.target.checked)}
-                className="h-4 w-4 accent-purple-500"
+                className="h-4 w-4 accent-gv-indigo"
               />
               SHOW DATE (PUBLISH DATE)
             </label>
@@ -1496,7 +1496,7 @@ export default function TracklistDetailPage() {
                 type="checkbox"
                 checked={mixReveal}
                 onChange={(e) => setMixReveal(e.target.checked)}
-                className="h-4 w-4 accent-purple-500"
+                className="h-4 w-4 accent-gv-indigo"
               />
               REVEAL MODE (ONE AT A TIME)
             </label>
@@ -1506,7 +1506,7 @@ export default function TracklistDetailPage() {
                 type="checkbox"
                 checked={includeSongNotes}
                 onChange={(e) => setIncludeSongNotes(e.target.checked)}
-                className="h-4 w-4 accent-purple-500"
+                className="h-4 w-4 accent-gv-indigo"
               />
               INCLUDE SONG NOTES
             </label>
@@ -1515,7 +1515,7 @@ export default function TracklistDetailPage() {
                 type="checkbox"
                 checked={mixIsPublic}
                 onChange={(e) => setMixIsPublic(e.target.checked)}
-                className="h-4 w-4 accent-purple-500"
+                className="h-4 w-4 accent-gv-indigo"
               />
               PUBLIC (ACCESS BY LINK)
             </label>
@@ -1525,7 +1525,7 @@ export default function TracklistDetailPage() {
                 type="checkbox"
                 checked={allowCopyToStudio}
                 onChange={(e) => setAllowCopyToStudio(e.target.checked)}
-                className="h-4 w-4 accent-purple-500"
+                className="h-4 w-4 accent-gv-indigo"
               />
               ALLOW RECIPIENT TO COPY TO STUDIO
             </label>
@@ -1533,7 +1533,7 @@ export default function TracklistDetailPage() {
             <button
               onClick={createMixlist}
               disabled={creatingMix}
-              className="mt-5 rounded-full border border-purple-500/40 bg-purple-500/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-purple-500/20 transition disabled:opacity-50"
+              className="mt-5 rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-gv-indigo/20 transition disabled:opacity-50"
             >
               {creatingMix ? "PUBLISHING…" : "PUBLISH MIXLIST"}
             </button>

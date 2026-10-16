@@ -64,8 +64,8 @@ export default function NewTracklistPage() {
             className={[
               "mt-2 w-full rounded-xl border px-4 py-3 outline-none transition",
               "border-border bg-card text-foreground placeholder:text-muted-foreground/70",
-              "focus:border-[#5b3cc4]/50 focus:ring-2 focus:ring-[#5b3cc4]/15",
-              "dark:focus:border-purple-500/40 dark:focus:ring-purple-500/20",
+              "focus:border-[#2A3170]/50 focus:ring-2 focus:ring-[#2A3170]/15",
+              "dark:focus:border-gv-indigo/40 dark:focus:ring-gv-indigo/20",
             ].join(" ")}
             placeholder="e.g. Songs that feel like home"
           />
@@ -81,8 +81,8 @@ export default function NewTracklistPage() {
             className={[
               "mt-2 w-full rounded-xl border px-4 py-3 outline-none transition",
               "border-border bg-card text-foreground placeholder:text-muted-foreground/70",
-              "focus:border-[#5b3cc4]/50 focus:ring-2 focus:ring-[#5b3cc4]/15",
-              "dark:focus:border-purple-500/40 dark:focus:ring-purple-500/20",
+              "focus:border-[#2A3170]/50 focus:ring-2 focus:ring-[#2A3170]/15",
+              "dark:focus:border-gv-indigo/40 dark:focus:ring-gv-indigo/20",
             ].join(" ")}
             placeholder="Short context for the list…"
             rows={4}
@@ -95,8 +95,8 @@ export default function NewTracklistPage() {
             disabled={saving}
             className={[
               "rounded-full border px-6 py-3 text-xs tracking-widest transition disabled:opacity-50",
-              "border-[#5b3cc4]/40 gv-accent text-[#4a2fb0] hover:bg-[#5b3cc4]/15",
-              "dark:border-purple-500/40 dark:bg-purple-500/10 dark:text-purple-200 dark:hover:bg-purple-500/20",
+              "border-[#2A3170]/40 gv-accent text-[#1F2860] hover:bg-[#2A3170]/15",
+              "dark:border-gv-indigo/40 dark:bg-gv-indigo/10 dark:text-gv-cream dark:hover:bg-gv-indigo/20",
             ].join(" ")}
           >
             {saving ? "CREATING…" : "CREATE"}
@@ -104,7 +104,7 @@ export default function NewTracklistPage() {
 
           <Link
             href="/tracklists"
-            className="text-xs tracking-widest text-muted-foreground transition hover:text-[#5b3cc4] dark:hover:text-purple-300"
+            className="text-xs tracking-widest text-muted-foreground transition hover:text-[#2A3170] dark:hover:text-gv-turquoise"
           >
             CANCEL
           </Link>

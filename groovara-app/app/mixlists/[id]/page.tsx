@@ -54,7 +54,7 @@ type MixlistProgressRow = {
 };
 
 const purpleActionButton =
-  "w-full rounded-full border border-purple-500/40 bg-purple-500/10 px-6 py-3 text-xs tracking-widest gv-accent transition hover:bg-purple-500/20 disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-6 py-3 text-xs tracking-widest gv-accent transition hover:bg-gv-indigo/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 // Shared Mixlists are public. Use a client that never reads or refreshes a
 // browser auth session for the public Mixlist/song payload itself.
@@ -1466,25 +1466,25 @@ export default function MixlistPage() {
   }, [loading, mix, mixlistId, songs.length]);
 
   const songNoteCard = mix?.include_song_notes ? (
-    <div className="rounded-[1.75rem] border border-[#5B4B6E] bg-[#5B4B6E] px-6 py-6 text-left shadow-sm sm:px-8 sm:py-7">
-      <p className="text-sm font-semibold tracking-[0.12em] text-[#F4EDDD] sm:text-base">
+    <div className="rounded-[1.75rem] border border-[#2A3170] bg-[#2A3170] px-6 py-6 text-left shadow-sm sm:px-8 sm:py-7">
+      <p className="text-sm font-semibold tracking-[0.12em] text-[#F0E9DA] sm:text-base">
         {noteRangeLabel}
       </p>
 
       {!activeSong ? (
-        <p className="mt-4 text-base leading-7 text-[#F4EDDD]/75 sm:text-lg sm:leading-8">
+        <p className="mt-4 text-base leading-7 text-[#F0E9DA]/75 sm:text-lg sm:leading-8">
           No song selected.
         </p>
       ) : activeIsHidden ? (
-        <p className="mt-4 text-base leading-7 text-[#F4EDDD]/75 sm:text-lg sm:leading-8">
+        <p className="mt-4 text-base leading-7 text-[#F0E9DA]/75 sm:text-lg sm:leading-8">
           Reveal this song to see the note.
         </p>
       ) : (activeSong.note ?? "").trim().length > 0 ? (
-        <p className="mt-4 whitespace-pre-wrap text-base leading-7 text-[#F4EDDD] sm:text-lg sm:leading-8">
+        <p className="mt-4 whitespace-pre-wrap text-base leading-7 text-[#F0E9DA] sm:text-lg sm:leading-8">
           {activeSong.note}
         </p>
       ) : (
-        <p className="mt-4 text-base leading-7 text-[#F4EDDD]/75 sm:text-lg sm:leading-8">
+        <p className="mt-4 text-base leading-7 text-[#F0E9DA]/75 sm:text-lg sm:leading-8">
           No note for this song.
         </p>
       )}
@@ -1493,7 +1493,7 @@ export default function MixlistPage() {
 
   const descriptionBlock = mix?.message ? (
     <div className="mt-5 max-w-5xl text-left">
-      <p className="whitespace-pre-wrap text-base leading-7 text-foreground/80 dark:text-[#C8BCA2]">
+      <p className="whitespace-pre-wrap text-base leading-7 text-foreground/80 dark:text-[#B4B8C0]">
         {mix.message}
       </p>
     </div>
@@ -1525,7 +1525,7 @@ export default function MixlistPage() {
             handlePreferredPlatformChange(e.target.value as Platform)
           }
           aria-label="Listen on platform"
-          className="w-40 appearance-none rounded-xl border border-[#5B4B6E] bg-card px-4 py-2.5 text-sm text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-[#5B4B6E]/50 dark:bg-black/70 dark:text-white dark:hover:bg-black/80 sm:w-48"
+          className="w-40 appearance-none rounded-xl border border-[#2A3170] bg-card px-4 py-2.5 text-sm text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-[#2A3170]/50 dark:bg-black/70 dark:text-white dark:hover:bg-black/80 sm:w-48"
         >
           <option value="spotify" className="bg-card text-foreground dark:bg-black dark:text-white">
             Spotify
@@ -1553,7 +1553,7 @@ export default function MixlistPage() {
         type="button"
         onClick={handlePreviousSong}
         disabled={safeSelectedIndex === 0}
-        className="rounded-full border-2 border-[#5B4B6E] bg-[#5B4B6E] px-5 py-4 text-[11px] font-semibold tracking-[0.14em] text-[#F4EDDD] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#493B59] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B4B6E]/40 disabled:cursor-not-allowed disabled:opacity-35 sm:px-8 sm:text-sm"
+        className="rounded-full border-2 border-[#2A3170] bg-[#2A3170] px-5 py-4 text-[11px] font-semibold tracking-[0.14em] text-[#F0E9DA] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#1F2860] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3170]/40 disabled:cursor-not-allowed disabled:opacity-35 sm:px-8 sm:text-sm"
       >
         PREVIOUS SONG
       </button>
@@ -1562,7 +1562,7 @@ export default function MixlistPage() {
         type="button"
         onClick={handleNextSong}
         disabled={safeSelectedIndex >= songs.length - 1}
-        className="rounded-full border-2 border-[#5B4B6E] bg-[#5B4B6E] px-5 py-4 text-[11px] font-semibold tracking-[0.14em] text-[#F4EDDD] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#493B59] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B4B6E]/40 disabled:cursor-not-allowed disabled:opacity-35 sm:px-8 sm:text-sm"
+        className="rounded-full border-2 border-[#2A3170] bg-[#2A3170] px-5 py-4 text-[11px] font-semibold tracking-[0.14em] text-[#F0E9DA] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#1F2860] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3170]/40 disabled:cursor-not-allowed disabled:opacity-35 sm:px-8 sm:text-sm"
       >
         {mix?.reveal_mode ? "REVEAL NEXT" : "NEXT SONG"}
       </button>
@@ -1605,10 +1605,10 @@ export default function MixlistPage() {
           closeMenu();
           void handleExportSpotify();
         }}
-        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-foreground transition hover:bg-purple-500/10"
+        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-foreground transition hover:bg-gv-indigo/10"
       >
         <span>Spotify</span>
-        <span className="text-xs text-[#5B4B6E] dark:text-[#C8BCA2]">Export</span>
+        <span className="text-xs text-[#2A3170] dark:text-[#B4B8C0]">Export</span>
       </button>
 
       <button
@@ -1618,10 +1618,10 @@ export default function MixlistPage() {
           void openYouTubeExportPreview();
         }}
         disabled={exportingYouTube}
-        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-foreground transition hover:bg-purple-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-foreground transition hover:bg-gv-indigo/10 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <span>YouTube</span>
-        <span className="text-xs text-[#5B4B6E] dark:text-[#C8BCA2]">
+        <span className="text-xs text-[#2A3170] dark:text-[#B4B8C0]">
           {youtubePreviewLoading
             ? "Checking..."
             : exportingYouTube
@@ -1637,10 +1637,10 @@ export default function MixlistPage() {
           void handleExportApple();
         }}
         disabled={exportingApple}
-        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-foreground transition hover:bg-purple-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-foreground transition hover:bg-gv-indigo/10 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <span>Apple Music</span>
-        <span className="text-xs text-[#5B4B6E] dark:text-[#C8BCA2]">
+        <span className="text-xs text-[#2A3170] dark:text-[#B4B8C0]">
           {exportingApple ? "Exporting..." : "Export"}
         </span>
       </button>
@@ -1686,7 +1686,7 @@ export default function MixlistPage() {
 
   const endOfMixPanel = showEndPanel ? (
     <section className="mx-auto mt-8 max-w-4xl">
-      <div className="gv-row rounded-3xl border border-purple-500/25 p-6 sm:p-7">
+      <div className="gv-row rounded-3xl border border-gv-indigo/25 p-6 sm:p-7">
         {isPublicBetaShowcase ? (
           <p className="whitespace-pre-wrap text-left text-base leading-7 text-foreground/90 sm:text-lg sm:leading-8">
             {PUBLIC_BETA_CLOSING_NOTE}
@@ -1706,7 +1706,7 @@ export default function MixlistPage() {
                 source: "mixlist_end_panel",
               })
             }
-            className="inline-flex w-full items-center justify-center rounded-full border border-[#5B4B6E] bg-[#5B4B6E] px-8 py-4 text-sm font-semibold tracking-[0.18em] text-[#F4EDDD] transition hover:-translate-y-0.5 hover:bg-[#493B59] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B4B6E]/40 dark:border-[#C8BCA2]/35"
+            className="inline-flex w-full items-center justify-center rounded-full border border-[#2A3170] bg-[#2A3170] px-8 py-4 text-sm font-semibold tracking-[0.18em] text-[#F0E9DA] transition hover:-translate-y-0.5 hover:bg-[#1F2860] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3170]/40 dark:border-[#B4B8C0]/35"
           >
             JOIN THE BETA
           </Link>
@@ -1817,7 +1817,7 @@ export default function MixlistPage() {
         style={{
           background: `radial-gradient(circle at 20% 12%, ${ambientTrack.theme.accentColor}22, transparent 45%),
                        radial-gradient(circle at 80% 84%, ${ambientTrack.theme.glowColor}26, transparent 40%),
-                       #1B1B19`,
+                       #1A1A23`,
         }}
       />
       {!showEndPanel ? (
@@ -1936,7 +1936,7 @@ export default function MixlistPage() {
                 <button
                   type="button"
                   onClick={handlePrimaryReveal}
-                  className="mt-7 w-full max-w-sm rounded-full border border-purple-500/40 bg-purple-500/10 px-6 py-3 text-xs tracking-widest gv-accent transition hover:bg-purple-500/20"
+                  className="mt-7 w-full max-w-sm rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-6 py-3 text-xs tracking-widest gv-accent transition hover:bg-gv-indigo/20"
                 >
                   REVEAL FIRST SONG
                 </button>
@@ -2061,12 +2061,12 @@ export default function MixlistPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="youtube-export-preview-title"
-            className="gv-row max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-purple-500/30 bg-background p-5 shadow-2xl sm:p-6"
+            className="gv-row max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-gv-indigo/30 bg-background p-5 shadow-2xl sm:p-6"
             onMouseDown={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs tracking-[0.24em] text-[#5B4B6E] dark:text-[#C8BCA2]">
+                <p className="text-xs tracking-[0.24em] text-[#2A3170] dark:text-[#B4B8C0]">
                   YOUTUBE EXPORT
                 </p>
                 <h2
@@ -2097,8 +2097,8 @@ export default function MixlistPage() {
                 </p>
               </div>
             ) : youtubePreviewError && !youtubePreview ? (
-              <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4">
-                <p className="text-sm text-[#A83B2C] dark:text-red-200">{youtubePreviewError}</p>
+              <div className="mt-6 rounded-2xl border border-gv-cherry/30 bg-gv-cherry/10 p-4">
+                <p className="text-sm text-[#BE3943] dark:text-gv-cream">{youtubePreviewError}</p>
                 <div className="mt-4 flex gap-3">
                   <button
                     type="button"
@@ -2146,7 +2146,7 @@ export default function MixlistPage() {
                 </div>
 
                 {youtubePreviewError ? (
-                  <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-[#A83B2C] dark:text-red-200">
+                  <div className="rounded-2xl border border-gv-cherry/30 bg-gv-cherry/10 p-4 text-sm text-[#BE3943] dark:text-gv-cream">
                     {youtubePreviewError}
                   </div>
                 ) : null}
@@ -2183,7 +2183,7 @@ export default function MixlistPage() {
                               )}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex-shrink-0 rounded-full border border-purple-500/40 bg-purple-500/10 px-3 py-2 text-[10px] tracking-widest gv-accent transition hover:bg-purple-500/20"
+                              className="flex-shrink-0 rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-3 py-2 text-[10px] tracking-widest gv-accent transition hover:bg-gv-indigo/20"
                             >
                               SEARCH YOUTUBE
                             </a>

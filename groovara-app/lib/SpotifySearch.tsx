@@ -71,13 +71,13 @@ export function SpotifySearch({
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-gray-100 outline-none focus:border-purple-500/40"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-gray-100 outline-none focus:border-gv-indigo/40"
           placeholder="Search Spotify… (song, artist, album)"
         />
       </div>
 
       {loading && <p className="mt-3 text-sm text-gray-400">Searching…</p>}
-      {err && <p className="mt-3 text-sm text-red-300">{err}</p>}
+      {err && <p className="mt-3 text-sm text-gv-cherry">{err}</p>}
 
       <div className="mt-4 space-y-2">
         {results.map((r) => (
@@ -103,7 +103,7 @@ export function SpotifySearch({
 
             <button
               onClick={() => onAdd(r)}
-              className="rounded-full border border-purple-500/40 bg-purple-500/10 px-4 py-2 text-[10px] tracking-widest text-purple-200 hover:bg-purple-500/20 transition flex-shrink-0"
+              className="rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-4 py-2 text-[10px] tracking-widest text-gv-cream hover:bg-gv-indigo/20 transition flex-shrink-0"
             >
               ADD
             </button>

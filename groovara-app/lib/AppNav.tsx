@@ -112,11 +112,11 @@ export default function AppNav() {
         <div ref={wrapRef} className="relative flex items-center gap-3">
           <button
             onClick={() => setOpen((v) => !v)}
-            className="group flex select-none items-center gap-3 rounded-full px-1.5 py-1 transition hover:bg-[#57577F]/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#57577F]/45 dark:hover:bg-white/[0.07] dark:focus-visible:ring-[#CED7DF]/45"
+            className="group flex select-none items-center gap-3 rounded-full px-1.5 py-1 transition hover:bg-[#2A3170]/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3170]/45 dark:hover:bg-white/[0.07] dark:focus-visible:ring-[#B4B8C0]/45"
             aria-haspopup="menu"
             aria-expanded={open}
           >
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-[#57577F]/[0.08] ring-1 ring-[#57577F]/15 transition group-hover:bg-[#57577F]/[0.12] dark:bg-white/[0.07] dark:ring-white/10 dark:group-hover:bg-white/[0.11]">
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-[#2A3170]/[0.08] ring-1 ring-[#2A3170]/15 transition group-hover:bg-[#2A3170]/[0.12] dark:bg-white/[0.07] dark:ring-white/10 dark:group-hover:bg-white/[0.11]">
               <Image
                 src="/groovara-icon-v2.png"
                 alt="Groovara logo"
@@ -128,18 +128,18 @@ export default function AppNav() {
             </span>
 
             <span className="flex items-baseline gap-2">
-              <span className="gv-brand-mark text-[13px] font-semibold tracking-[0.42em] text-[#424266] dark:text-[#CED7DF]">
+              <span className="gv-brand-mark text-[13px] font-semibold tracking-[0.42em] text-[#1F2860] dark:text-[#B4B8C0]">
                 GROOVARA
               </span>
 
-              <span className="hidden text-[10px] font-medium tracking-[0.22em] text-[#57577F]/75 dark:text-[#CED7DF]/65 sm:inline">
+              <span className="hidden text-[10px] font-medium tracking-[0.22em] text-[#2A3170]/75 dark:text-[#B4B8C0]/65 sm:inline">
                 beta
               </span>
             </span>
 
             <span
               aria-hidden="true"
-              className={`text-xs text-[#57577F]/80 transition-transform dark:text-[#CED7DF]/75 ${
+              className={`text-xs text-[#2A3170]/80 transition-transform dark:text-[#B4B8C0]/75 ${
                 open ? "rotate-180" : "rotate-0"
               }`}
             >
@@ -148,7 +148,7 @@ export default function AppNav() {
           </button>
 
           {APP_VERSION && (
-            <div className="hidden rounded-full border border-[#57577F]/25 bg-[#57577F]/10 px-3 py-1 text-[10px] tracking-[0.18em] text-[#3f3f63] select-none sm:block dark:border-white/15 dark:bg-white/10 dark:text-[#CED7DF]">
+            <div className="hidden rounded-full border border-[#2A3170]/25 bg-[#2A3170]/10 px-3 py-1 text-[10px] tracking-[0.18em] text-[#1F2860] select-none sm:block dark:border-white/15 dark:bg-white/10 dark:text-[#B4B8C0]">
               {APP_VERSION}
             </div>
           )}
@@ -156,11 +156,11 @@ export default function AppNav() {
           {open && (
             <div
               role="menu"
-              className="fixed top-12 left-0 z-[2147483647] w-72 overflow-hidden rounded-r-3xl border border-[#cfc3ad] bg-[#fff8ec]/98 p-3 text-[#24211f] shadow-[0_18px_42px_rgba(64,47,31,0.22)] backdrop-blur-xl dark:border-white/10 dark:bg-[#111113]/95 dark:text-white dark:shadow-[0_18px_42px_rgba(0,0,0,0.45)]"
+              className="fixed top-12 left-0 z-[2147483647] w-72 overflow-hidden rounded-r-3xl border border-[#B4B8C0] bg-[#F0E9DA]/98 p-3 text-[#1A1A23] shadow-[0_18px_42px_rgba(64,47,31,0.22)] backdrop-blur-xl dark:border-white/10 dark:bg-[#1A1A23]/95 dark:text-white dark:shadow-[0_18px_42px_rgba(0,0,0,0.45)]"
             >
-              <div className="pointer-events-none absolute -right-10 -top-14 h-36 w-36 rounded-full border-[11px] border-[#57577F]/[0.08] dark:border-[#CED7DF]/[0.07]" />
+              <div className="pointer-events-none absolute -right-10 -top-14 h-36 w-36 rounded-full border-[11px] border-[#2A3170]/[0.08] dark:border-[#B4B8C0]/[0.07]" />
 
-              <div className="pointer-events-none absolute -left-14 bottom-2 h-28 w-28 rounded-full border-[9px] border-[#57577F]/[0.055] dark:border-[#CED7DF]/[0.045]" />
+              <div className="pointer-events-none absolute -left-14 bottom-2 h-28 w-28 rounded-full border-[9px] border-[#2A3170]/[0.055] dark:border-[#B4B8C0]/[0.045]" />
 
               <div className="relative py-1">
                 {items.map((it, idx) => {
@@ -168,7 +168,7 @@ export default function AppNav() {
                     return (
                       <div
                         key={`div-${idx}`}
-                        className="my-2 border-t border-[#57577F]/15 dark:border-white/10"
+                        className="my-2 border-t border-[#2A3170]/15 dark:border-white/10"
                       />
                     );
                   }
@@ -177,7 +177,7 @@ export default function AppNav() {
                     return (
                       <div
                         key={`custom-${idx}`}
-                        className="rounded-2xl px-2 py-1 text-sm text-[#24211f] dark:text-white
+                        className="rounded-2xl px-2 py-1 text-sm text-[#1A1A23] dark:text-white
                           [&_button]:w-full
                           [&_button]:rounded-2xl
                           [&_button]:bg-transparent
@@ -186,10 +186,10 @@ export default function AppNav() {
                           [&_button]:text-left
                           [&_button]:text-sm
                           [&_button]:font-semibold
-                          [&_button]:text-[#24211f]
+                          [&_button]:text-[#1A1A23]
                           [&_button]:transition
-                          [&_button]:hover:bg-[#57577F]/12
-                          [&_button]:hover:text-[#3f3f63]
+                          [&_button]:hover:bg-[#2A3170]/12
+                          [&_button]:hover:text-[#1F2860]
                           dark:[&_button]:text-white/85
                           dark:[&_button]:hover:bg-white/10
                           dark:[&_button]:hover:text-white"
@@ -207,10 +207,10 @@ export default function AppNav() {
                       href={it.href}
                       role="menuitem"
                       onClick={() => setOpen(false)}
-                      className={`block rounded-2xl px-4 py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#57577F]/35 dark:focus-visible:ring-[#CED7DF]/35 ${
+                      className={`block rounded-2xl px-4 py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3170]/35 dark:focus-visible:ring-[#B4B8C0]/35 ${
                         active
-                          ? "bg-[#57577F] text-[#fff8ec] shadow-[0_10px_26px_rgba(87,87,127,0.24)] dark:bg-[#CED7DF]/15 dark:text-[#CED7DF] dark:shadow-[0_10px_26px_rgba(0,0,0,0.24)]"
-                          : "text-[#24211f] hover:bg-[#57577F]/12 hover:text-[#3f3f63] dark:text-white/85 dark:hover:bg-white/10 dark:hover:text-white"
+                          ? "bg-[#2A3170] text-[#F0E9DA] shadow-[0_10px_26px_rgba(87,87,127,0.24)] dark:bg-[#B4B8C0]/15 dark:text-[#B4B8C0] dark:shadow-[0_10px_26px_rgba(0,0,0,0.24)]"
+                          : "text-[#1A1A23] hover:bg-[#2A3170]/12 hover:text-[#1F2860] dark:text-white/85 dark:hover:bg-white/10 dark:hover:text-white"
                       }`}
                     >
                       <span className="block text-sm font-semibold tracking-[0.02em]">
@@ -221,7 +221,7 @@ export default function AppNav() {
                         <span
                           className={`mt-0.5 block text-xs leading-snug ${
                             active
-                              ? "text-[#fff8ec]/80 dark:text-[#CED7DF]/70"
+                              ? "text-[#F0E9DA]/80 dark:text-[#B4B8C0]/70"
                               : "text-[#4f473e] dark:text-white/45"
                           }`}
                         >
@@ -236,7 +236,7 @@ export default function AppNav() {
           )}
         </div>
 
-        <div className="relative z-10 flex items-center rounded-full border border-[#57577F]/20 bg-[#fff8ec]/75 px-1.5 py-1 shadow-[0_8px_22px_rgba(64,47,31,0.10)] dark:border-white/10 dark:bg-white/[0.04]">
+        <div className="relative z-10 flex items-center rounded-full border border-[#2A3170]/20 bg-[#F0E9DA]/75 px-1.5 py-1 shadow-[0_8px_22px_rgba(64,47,31,0.10)] dark:border-white/10 dark:bg-white/[0.04]">
           <ThemeToggle />
         </div>
       </div>

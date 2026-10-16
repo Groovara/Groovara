@@ -40,7 +40,7 @@ export default function TrackView({
 }: TrackViewProps) {
   return (
     <section
-      className="relative overflow-hidden rounded-3xl border-2 border-[#5B4B6E] bg-card/70 p-5 text-foreground backdrop-blur-md dark:bg-[var(--track-theme-background)] dark:text-[var(--track-theme-text)] sm:p-6"
+      className="relative overflow-hidden rounded-3xl border-2 border-gv-indigo bg-card/70 p-5 text-foreground backdrop-blur-md dark:bg-[var(--track-theme-background)] dark:text-[var(--track-theme-text)] sm:p-6"
       style={
         {
           "--track-theme-background": track.theme.backgroundColor,

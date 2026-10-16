@@ -94,7 +94,7 @@ export default function AppleMusicConnectionCard() {
           Checking connection…
         </p>
       ) : state === "connected" ? (
-        <div className="mt-4 rounded-2xl border border-[#5B4B6E]/25 bg-[#5B4B6E]/10 p-5">
+        <div className="mt-4 rounded-2xl border border-[#2A3170]/25 bg-[#2A3170]/10 p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/10 text-lg text-foreground dark:bg-white/10">
@@ -115,7 +115,7 @@ export default function AppleMusicConnectionCard() {
               type="button"
               onClick={() => void disconnect()}
               disabled={working}
-              className="shrink-0 rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs tracking-widest text-red-700 transition hover:bg-red-500/20 disabled:opacity-50 dark:text-red-200"
+              className="shrink-0 rounded-full border border-gv-cherry/30 bg-gv-cherry/10 px-4 py-2 text-xs tracking-widest text-gv-cherry transition hover:bg-gv-cherry/20 disabled:opacity-50 dark:text-gv-cream"
             >
               {working ? "DISCONNECTING…" : "DISCONNECT"}
             </button>
@@ -132,7 +132,7 @@ export default function AppleMusicConnectionCard() {
             type="button"
             onClick={() => void connect()}
             disabled={working}
-            className="mt-3 inline-flex rounded-full border border-purple-500/40 bg-purple-500/10 px-5 py-2 text-xs tracking-widest text-purple-800 transition hover:bg-purple-500/15 disabled:opacity-50 dark:text-purple-200"
+            className="mt-3 inline-flex rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-5 py-2 text-xs tracking-widest text-gv-vat transition hover:bg-gv-indigo/15 disabled:opacity-50 dark:text-gv-cream"
           >
             {working ? "CONNECTING…" : "CONNECT APPLE MUSIC"}
           </button>
@@ -143,7 +143,7 @@ export default function AppleMusicConnectionCard() {
         <p
           className={`mt-3 text-xs ${
             state === "error"
-              ? "text-red-700 dark:text-red-300"
+              ? "text-gv-cherry dark:text-gv-cherry"
               : "text-muted-foreground"
           }`}
         >

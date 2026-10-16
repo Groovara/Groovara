@@ -165,7 +165,7 @@ export default function UnifiedSearch({
             setErr(null);
             setManualSearchUrl(null);
           }}
-          className="rounded-xl gv-row border border-white/10 bg-white/5 px-3 py-3 text-gv-accent outline-none focus:border-purple-500/40"
+          className="rounded-xl gv-row border border-white/10 bg-white/5 px-3 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
         >
           <option value="spotify" className="gv-row text-gv-accent">
             Spotify
@@ -193,7 +193,7 @@ export default function UnifiedSearch({
               submitSearch();
             }
           }}
-          className="w-full rounded-xl gv-row border border-white/10 bg-black/5 px-4 py-3 text-gv-accent outline-none focus:border-purple-500/40"
+          className="w-full rounded-xl gv-row border border-white/10 bg-black/5 px-4 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
           placeholder={
             platform === "spotify"
               ? "Search Spotify… (song, artist, album)"
@@ -207,7 +207,7 @@ export default function UnifiedSearch({
           type="button"
           onClick={submitSearch}
           disabled={!trimmed || loading}
-          className="shrink-0 rounded-full border border-purple-500/40 bg-purple-500/10 px-5 py-3 text-[10px] tracking-widest text-gv-accent transition hover:bg-purple-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+          className="shrink-0 rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-5 py-3 text-[10px] tracking-widest text-gv-accent transition hover:bg-gv-indigo/20 disabled:cursor-not-allowed disabled:opacity-50"
         >
           SEARCH
         </button>
@@ -218,8 +218,8 @@ export default function UnifiedSearch({
       ) : null}
 
       {err ? (
-        <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 p-3">
-          <p className="text-sm text-red-700 dark:text-red-300">
+        <div className="mt-3 rounded-xl border border-gv-cherry/20 bg-gv-cherry/5 p-3">
+          <p className="text-sm text-gv-cherry dark:text-gv-cherry">
             {err}
           </p>
 
@@ -277,7 +277,7 @@ export default function UnifiedSearch({
                   setManualSearchUrl(null);
                 }
               }}
-              className="flex-shrink-0 rounded-full border border-purple-500/40 bg-purple-500/10 px-4 py-2 text-[10px] tracking-widest text-gv-accent transition hover:bg-purple-500/20"
+              className="flex-shrink-0 rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-4 py-2 text-[10px] tracking-widest text-gv-accent transition hover:bg-gv-indigo/20"
             >
               ADD
             </button>

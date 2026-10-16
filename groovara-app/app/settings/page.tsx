@@ -245,7 +245,7 @@ export default function SettingsPage() {
                         : prev,
                     )
                   }
-                  className="h-5 w-5 accent-purple-500"
+                  className="h-5 w-5 accent-gv-indigo"
                 />
               </label>
 
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                         : prev,
                     )
                   }
-                  className="h-5 w-5 accent-purple-500"
+                  className="h-5 w-5 accent-gv-indigo"
                 />
               </label>
 
@@ -300,14 +300,14 @@ export default function SettingsPage() {
                         : prev,
                     )
                   }
-                  className="h-5 w-5 accent-purple-500"
+                  className="h-5 w-5 accent-gv-indigo"
                 />
               </label>
 
               <button
                 onClick={save}
                 disabled={saving}
-                className="mt-2 rounded-full border border-purple-500/40 bg-purple-500/10 px-6 py-3 text-xs tracking-widest text-purple-800 hover:bg-purple-500/15 transition disabled:opacity-50 dark:text-purple-200"
+                className="mt-2 rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-6 py-3 text-xs tracking-widest text-gv-vat hover:bg-gv-indigo/15 transition disabled:opacity-50 dark:text-gv-cream"
               >
                 {saving ? "SAVING…" : "SAVE"}
               </button>
@@ -371,7 +371,7 @@ export default function SettingsPage() {
                         Not connected.
                       </p>
                       <a
-                        className="mt-3 inline-flex rounded-full border border-purple-500/40 bg-purple-500/10 px-5 py-2 text-xs tracking-widest text-purple-800 hover:bg-purple-500/15 transition dark:text-purple-200"
+                        className="mt-3 inline-flex rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-5 py-2 text-xs tracking-widest text-gv-vat hover:bg-gv-indigo/15 transition dark:text-gv-cream"
                         href="/api/spotify/login"
                       >
                         CONNECT SPOTIFY
@@ -392,10 +392,10 @@ export default function SettingsPage() {
                       Checking connection…
                     </p>
                   ) : youtubeConnected ? (
-                    <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-5">
+                    <div className="mt-4 rounded-2xl border border-gv-cherry/30 bg-gv-cherry/10 p-5">
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-sm font-semibold text-red-700 dark:text-red-200">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gv-cherry/20 text-sm font-semibold text-gv-cherry dark:text-gv-cream">
                             ▶
                           </div>
 
@@ -408,7 +408,7 @@ export default function SettingsPage() {
                             </p>
                             {youtubeChannelId ? (
                               <a
-                                className="text-xs text-red-700 hover:text-red-900 dark:text-red-200 dark:hover:text-red-100"
+                                className="text-xs text-gv-cherry hover:text-gv-cherry dark:text-gv-cream dark:hover:text-gv-cream"
                                 href={`https://www.youtube.com/channel/${youtubeChannelId}`}
                                 target="_blank"
                                 rel="noreferrer"
@@ -423,7 +423,7 @@ export default function SettingsPage() {
                           type="button"
                           onClick={disconnectYoutube}
                           disabled={disconnectingYoutube}
-                          className="shrink-0 rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs tracking-widest text-red-700 transition hover:bg-red-500/20 disabled:opacity-50 dark:text-red-200"
+                          className="shrink-0 rounded-full border border-gv-cherry/30 bg-gv-cherry/10 px-4 py-2 text-xs tracking-widest text-gv-cherry transition hover:bg-gv-cherry/20 disabled:opacity-50 dark:text-gv-cream"
                         >
                           {disconnectingYoutube
                             ? "DISCONNECTING…"
@@ -438,7 +438,7 @@ export default function SettingsPage() {
                         YouTube playlists.
                       </p>
                       <a
-                        className="mt-3 inline-flex rounded-full border border-purple-500/40 bg-purple-500/10 px-5 py-2 text-xs tracking-widest text-purple-800 hover:bg-purple-500/15 transition dark:text-purple-200"
+                        className="mt-3 inline-flex rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-5 py-2 text-xs tracking-widest text-gv-vat hover:bg-gv-indigo/15 transition dark:text-gv-cream"
                         href={`/api/youtube/connect?returnTo=${encodeURIComponent(
                           "/settings",
                         )}`}

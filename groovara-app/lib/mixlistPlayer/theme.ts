@@ -50,19 +50,19 @@ export function createTheme(seed: string, title: string, artist: string): UiTrac
   // Keep the player atmospheric, but make Plum the dominant brand accent.
   // Blue-Green and Brick appear occasionally; Sage is deliberately rare.
   const scenePalettes = [
-    { accent: "#5B4B6E", glow: "#657681" },
-    { accent: "#5B4B6E", glow: "#C8BCA2" },
-    { accent: "#5B4B6E", glow: "#657681" },
-    { accent: "#657681", glow: "#5B4B6E" },
-    { accent: "#5B4B6E", glow: "#85866A" },
-    { accent: "#A83B2C", glow: "#5B4B6E" },
+    { accent: "#2A3170", glow: "#58A6A1" },
+    { accent: "#2A3170", glow: "#B4B8C0" },
+    { accent: "#2A3170", glow: "#58A6A1" },
+    { accent: "#58A6A1", glow: "#2A3170" },
+    { accent: "#2A3170", glow: "#58A6A1" },
+    { accent: "#BE3943", glow: "#2A3170" },
   ] as const;
 
   const palette = scenePalettes[h % scenePalettes.length];
 
   return {
-    backgroundColor: h % 3 === 0 ? "#292923" : "#1B1B19",
-    textColor: "#F4EDDD",
+    backgroundColor: h % 3 === 0 ? "#1A1A23" : "#1A1A23",
+    textColor: "#F0E9DA",
     accentColor: palette.accent,
     glowColor: palette.glow,
     words: pickWords(h, title, artist),

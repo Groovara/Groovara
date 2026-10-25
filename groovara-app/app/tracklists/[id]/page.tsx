@@ -24,7 +24,7 @@ import {
 } from "./actions";
 import { deleteTracklistAction } from "../actions";
 import CharacterCounter from "@/lib/CharacterCounter";
-import type { UploadedMediaRecord } from "@/lib/LocalMediaUpload";
+import type { UploadedMediaRecord } from "@/lib/LocalMediaUpload.tsx";
 import {
   convertTrackPlatform,
   type Platform as ConversionPlatform,

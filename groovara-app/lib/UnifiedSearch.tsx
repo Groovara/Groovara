@@ -1,289 +1,315 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import LocalMediaUpload, {
+  type UploadedMediaRecord,
+} from "@/lib/LocalMediaUpload";
 
-export type PlatformKey = "spotify" | "apple" | "youtube";
+type SearchPlatform = "spotify" | "apple" | "youtube";
+type PlatformKey = SearchPlatform | "upload";
 
 export type UnifiedSearchResult = {
-  platform: PlatformKey;
+  platform: SearchPlatform;
   track_id: string;
   title: string;
   artist: string;
   album: string | null;
   url: string;
   image: string | null;
-  isrc: string | null;
+  isrc?: string | null;
+};
+
+type RegisterResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
+type UnifiedSearchProps = {
+  onAdd: (result: UnifiedSearchResult) => void | Promise<void>;
+  disabled?: boolean;
+  uploadTracklistId?: string;
+  onRegisterUpload?: (
+    record: UploadedMediaRecord,
+  ) => Promise<RegisterResult>;
+};
+
+type SearchApiTrack = {
+  id?: string;
+  track_id?: string;
+  video_id?: string;
+  title?: string;
+  name?: string;
+  artist?: string;
+  channel_title?: string;
+  album?: string | null;
+  url?: string;
+  youtube_url?: string;
+  image?: string | null;
+  thumbnail_url?: string | null;
+  isrc?: string | null;
 };
 
 type SearchApiResponse = {
-  tracks?: Array<{
-    id: string;
-    title: string;
-    artist: string;
-    album?: string | null;
-    url: string;
-    image?: string | null;
-    isrc?: string | null;
-  }>;
+  tracks?: SearchApiTrack[];
+  results?: SearchApiTrack[];
+  items?: SearchApiTrack[];
   error?: string;
-  code?: string;
-  manualSearchUrl?: string;
 };
+
+const PLATFORM_LABELS: Record<PlatformKey, string> = {
+  spotify: "Spotify",
+  apple: "Apple Music",
+  youtube: "YouTube",
+  upload: "Upload",
+};
+
+function getEndpoint(platform: SearchPlatform) {
+  if (platform === "spotify") return "/api/spotify/search";
+  if (platform === "apple") return "/api/apple/search";
+  return "/api/youtube/search";
+}
+
+function normalizeTrack(
+  platform: SearchPlatform,
+  raw: SearchApiTrack,
+): UnifiedSearchResult | null {
+  const trackId = raw.id ?? raw.track_id ?? raw.video_id ?? "";
+  const title = raw.title ?? raw.name ?? "";
+  const artist = raw.artist ?? raw.channel_title ?? "";
+  const url = raw.url ?? raw.youtube_url ?? "";
+
+  if (!trackId || !title || !artist || !url) return null;
+
+  return {
+    platform,
+    track_id: trackId,
+    title,
+    artist,
+    album: raw.album ?? null,
+    url,
+    image: raw.image ?? raw.thumbnail_url ?? null,
+    isrc: raw.isrc ?? null,
+  };
+}
 
 export default function UnifiedSearch({
   onAdd,
-}: {
-  onAdd: (t: UnifiedSearchResult) => Promise<void> | void;
-}) {
+  disabled = false,
+  uploadTracklistId,
+  onRegisterUpload,
+}: UnifiedSearchProps) {
   const [platform, setPlatform] = useState<PlatformKey>("spotify");
-  const [q, setQ] = useState("");
-  const [submittedQuery, setSubmittedQuery] = useState("");
-  const [searchVersion, setSearchVersion] = useState(0);
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState<UnifiedSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [manualSearchUrl, setManualSearchUrl] = useState<string | null>(null);
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const resultCacheRef = useRef(
-    new Map<string, UnifiedSearchResult[]>(),
-  );
+  const canUpload = Boolean(uploadTracklistId && onRegisterUpload);
 
-  const trimmed = useMemo(() => q.trim(), [q]);
-
-  const submitSearch = () => {
-    if (!trimmed || loading) return;
-
-    const cacheKey = `${platform}:${trimmed.toLowerCase()}`;
-    const cached = resultCacheRef.current.get(cacheKey);
-
-    if (cached) {
-      setResults(cached);
-      setErr(null);
-      setManualSearchUrl(null);
+  useEffect(() => {
+    if (platform === "upload") {
+      setResults([]);
+      setLoading(false);
+      setError(null);
       return;
     }
 
-    setSubmittedQuery(trimmed);
-    setSearchVersion((value) => value + 1);
-  };
+    const trimmed = query.trim();
 
-  useEffect(() => {
-    if (!submittedQuery) return;
-
-    const endpoint =
-      platform === "spotify"
-        ? "/api/spotify/search"
-        : platform === "youtube"
-          ? "/api/youtube/search"
-          : "/api/apple/search";
-
-    const cacheKey = `${platform}:${submittedQuery.toLowerCase()}`;
-    const cached = resultCacheRef.current.get(cacheKey);
-
-    if (cached) {
-      setResults(cached);
-      setErr(null);
-      setManualSearchUrl(null);
+    if (trimmed.length < 2) {
+      setResults([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     const controller = new AbortController();
 
-    const run = async () => {
-      try {
-        setLoading(true);
-        setErr(null);
-        setManualSearchUrl(null);
+    const timer = window.setTimeout(async () => {
+      setLoading(true);
+      setError(null);
 
-        const res = await fetch(
-          `${endpoint}?q=${encodeURIComponent(submittedQuery)}`,
-          { signal: controller.signal },
+      try {
+        const response = await fetch(
+          `${getEndpoint(platform)}?q=${encodeURIComponent(trimmed)}`,
+          {
+            signal: controller.signal,
+          },
         );
 
-        const json = (await res.json().catch(() => null)) as
-          | SearchApiResponse
-          | null;
+        const data = (await response.json()) as SearchApiResponse;
 
-        if (!res.ok || json?.error) {
-          setResults([]);
-          setErr(
-            json?.error ??
-              `Search failed (${res.status})`,
+        if (!response.ok) {
+          throw new Error(data.error ?? "Search failed.");
+        }
+
+        const rawTracks = data.tracks ?? data.results ?? data.items ?? [];
+        const normalized = rawTracks
+          .map((track) => normalizeTrack(platform, track))
+          .filter(
+            (track): track is UnifiedSearchResult => track !== null,
           );
 
-          if (
-            platform === "youtube" &&
-            typeof json?.manualSearchUrl === "string"
-          ) {
-            setManualSearchUrl(json.manualSearchUrl);
-          }
-
-          return;
-        }
-
-        const normalized: UnifiedSearchResult[] =
-          (json?.tracks ?? []).map((r) => ({
-            platform,
-            track_id: r.id,
-            title: r.title,
-            artist: r.artist,
-            album: r.album ?? null,
-            url: r.url,
-            image: r.image ?? null,
-            isrc: r.isrc ?? null,
-          }));
-
-        resultCacheRef.current.set(cacheKey, normalized);
         setResults(normalized);
-      } catch (e: unknown) {
-        if (
-          !(e instanceof DOMException && e.name === "AbortError")
-        ) {
-          setResults([]);
-          setErr("Search failed. Check your connection and try again.");
-        }
+      } catch (caught) {
+        if (controller.signal.aborted) return;
+
+        setResults([]);
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "Search failed. Please try again.",
+        );
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
     };
+  }, [platform, query]);
 
-    void run();
+  const add = async (result: UnifiedSearchResult) => {
+    if (disabled || addingId) return;
 
-    return () => controller.abort();
-  }, [platform, searchVersion, submittedQuery]);
+    setAddingId(`${result.platform}:${result.track_id}`);
+
+    try {
+      await onAdd(result);
+    } finally {
+      setAddingId(null);
+    }
+  };
 
   return (
-    <div className="mt-4">
-      <div className="flex items-center gap-3">
-        <select
-          value={platform}
-          onChange={(e) => {
-            setPlatform(e.target.value as PlatformKey);
-            setSubmittedQuery("");
-            setResults([]);
-            setErr(null);
-            setManualSearchUrl(null);
-          }}
-          className="rounded-xl gv-row border border-white/10 bg-white/5 px-3 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
-        >
-          <option value="spotify" className="gv-row text-gv-accent">
-            Spotify
-          </option>
-          <option value="youtube" className="gv-row text-gv-accent">
-            YouTube
-          </option>
-          <option value="apple" className="gv-row text-gv-accent">
-            Apple Music
-          </option>
-        </select>
+    <section className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="block sm:w-48">
+          <span className="block text-xs tracking-[0.18em] text-muted-foreground">
+            SOURCE
+          </span>
 
-        <input
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setSubmittedQuery("");
-            setResults([]);
-            setErr(null);
-            setManualSearchUrl(null);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              submitSearch();
-            }
-          }}
-          className="w-full rounded-xl gv-row border border-white/10 bg-black/5 px-4 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
-          placeholder={
-            platform === "spotify"
-              ? "Search Spotify… (song, artist, album)"
-              : platform === "apple"
-                ? "Search Apple Music… (song, artist, album)"
-                : "Search YouTube… (song, artist, album)"
-          }
-        />
-
-        <button
-          type="button"
-          onClick={submitSearch}
-          disabled={!trimmed || loading}
-          className="shrink-0 rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-5 py-3 text-[10px] tracking-widest text-gv-accent transition hover:bg-gv-indigo/20 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          SEARCH
-        </button>
-      </div>
-
-      {loading ? (
-        <p className="mt-3 text-sm text-gray-400">Searching…</p>
-      ) : null}
-
-      {err ? (
-        <div className="mt-3 rounded-xl border border-gv-cherry/20 bg-gv-cherry/5 p-3">
-          <p className="text-sm text-gv-cherry dark:text-gv-cherry">
-            {err}
-          </p>
-
-          {manualSearchUrl ? (
-            <a
-              href={manualSearchUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-2 inline-flex text-xs font-semibold tracking-widest text-gv-accent underline underline-offset-4"
-            >
-              SEARCH ON YOUTUBE
-            </a>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="mt-4 space-y-2">
-        {results.map((r) => (
-          <div
-            key={`${r.platform}:${r.track_id}`}
-            className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+          <select
+            value={platform}
+            onChange={(event) => {
+              const next = event.target.value as PlatformKey;
+              setPlatform(next);
+              setError(null);
+              setResults([]);
+            }}
+            disabled={disabled}
+            className="mt-2 w-full rounded-xl border border-[#2A3170]/30 bg-card px-4 py-3 text-sm font-semibold text-foreground outline-none transition hover:border-[#2A3170]/55 focus:border-[#58A6A1] focus:ring-2 focus:ring-[#58A6A1]/15 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
           >
-            <div className="flex min-w-0 items-center gap-4">
-              <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-white/10">
-                {r.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={r.image}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                ) : null}
-              </div>
+            <option value="spotify">{PLATFORM_LABELS.spotify}</option>
+            <option value="apple">{PLATFORM_LABELS.apple}</option>
+            <option value="youtube">{PLATFORM_LABELS.youtube}</option>
+            {canUpload ? (
+              <option value="upload">{PLATFORM_LABELS.upload}</option>
+            ) : null}
+          </select>
+        </label>
 
-              <div className="min-w-0">
-                <p className="truncate text-sm text-gv-accent">
-                  {r.title}
-                </p>
-                <p className="truncate text-xs text-gv-accent">
-                  {r.artist}
-                  {r.album ? ` • ${r.album}` : ""}
-                </p>
-              </div>
-            </div>
+        {platform !== "upload" ? (
+          <label className="block min-w-0 flex-1">
+            <span className="block text-xs tracking-[0.18em] text-muted-foreground">
+              SEARCH
+            </span>
 
-            <button
-              onClick={async () => {
-                try {
-                  await onAdd(r);
-                } finally {
-                  setQ("");
-                  setSubmittedQuery("");
-                  setResults([]);
-                  setErr(null);
-                  setManualSearchUrl(null);
-                }
-              }}
-              className="flex-shrink-0 rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-4 py-2 text-[10px] tracking-widest text-gv-accent transition hover:bg-gv-indigo/20"
-            >
-              ADD
-            </button>
-          </div>
-        ))}
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              disabled={disabled}
+              placeholder={`Search ${PLATFORM_LABELS[platform]}...`}
+              className="mt-2 w-full rounded-xl border border-border bg-card/70 px-4 py-3 text-sm text-foreground outline-none transition focus:border-[#58A6A1] focus:ring-2 focus:ring-[#58A6A1]/15 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </label>
+        ) : null}
       </div>
-    </div>
+
+      {platform === "upload" ? (
+        uploadTracklistId && onRegisterUpload ? (
+          <LocalMediaUpload
+            tracklistId={uploadTracklistId}
+            disabled={disabled}
+            onRegister={onRegisterUpload}
+          />
+        ) : (
+          <p className="rounded-xl border border-[#BE3943]/25 bg-[#BE3943]/10 px-4 py-3 text-sm text-[#9D2D36] dark:text-[#F4A2A8]">
+            Uploads are not available in this view.
+          </p>
+        )
+      ) : (
+        <>
+          {loading ? (
+            <p className="text-xs tracking-[0.14em] text-muted-foreground">
+              SEARCHING...
+            </p>
+          ) : null}
+
+          {error ? (
+            <p className="rounded-xl border border-[#BE3943]/25 bg-[#BE3943]/10 px-4 py-3 text-sm text-[#9D2D36] dark:text-[#F4A2A8]">
+              {error}
+            </p>
+          ) : null}
+
+          {!loading && !error && query.trim().length >= 2 && results.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No results found.
+            </p>
+          ) : null}
+
+          {results.length > 0 ? (
+            <div className="space-y-2">
+              {results.map((result) => {
+                const resultKey = `${result.platform}:${result.track_id}`;
+                const adding = addingId === resultKey;
+
+                return (
+                  <div
+                    key={resultKey}
+                    className="gv-row flex items-center gap-3 rounded-2xl p-3"
+                  >
+                    {result.image ? (
+                      <img
+                        src={result.image}
+                        alt=""
+                        className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-lg border border-border bg-card/60 text-[9px] tracking-[0.12em] text-muted-foreground">
+                        {PLATFORM_LABELS[result.platform].toUpperCase()}
+                      </div>
+                    )}
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {result.title}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {result.artist}
+                        {result.album ? ` • ${result.album}` : ""}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => void add(result)}
+                      disabled={disabled || Boolean(addingId)}
+                      className="flex-shrink-0 rounded-full border border-[#BE3943] bg-[#BE3943] px-4 py-2 text-[10px] font-semibold tracking-[0.14em] text-[#F0E9DA] transition hover:-translate-y-0.5 hover:bg-[#A9323B] disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      {adding ? "ADDING..." : "ADD"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+        </>
+      )}
+    </section>
   );
 }

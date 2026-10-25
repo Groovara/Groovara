@@ -240,7 +240,7 @@ export default function LocalMediaUpload({
             value={album}
             onChange={(event) => setAlbum(event.target.value)}
             disabled={!file || disabled || uploading}
-            placeholder="Optional - e.g. Fuzzy's Tuesday Night, Oct. 20"
+            placeholder="Optional"
             className="mt-2 w-full rounded-xl border border-border bg-card/70 px-4 py-3 text-sm text-foreground outline-none transition focus:border-[#58A6A1] focus:ring-2 focus:ring-[#58A6A1]/15 disabled:opacity-45"
           />
         </label>

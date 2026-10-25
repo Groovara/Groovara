@@ -156,11 +156,11 @@ export default function AppNav() {
 
               {APP_VERSION ? (
                 <span className="shrink-0 rounded-full border border-[#58A6A1] bg-transparent px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#2D7774] transition group-hover:bg-[#58A6A1]/10 sm:px-3 sm:py-1.5 sm:text-[10px] dark:text-[#86CBC7]">
-                  BETA {APP_VERSION}
+                  {APP_VERSION}
                 </span>
               ) : (
                 <span className="shrink-0 rounded-full border border-[#58A6A1] bg-transparent px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#2D7774] transition group-hover:bg-[#58A6A1]/10 sm:px-3 sm:py-1.5 sm:text-[10px] dark:text-[#86CBC7]">
-                  BETA
+                  
                 </span>
               )}
             </span>
@@ -291,7 +291,11 @@ export default function AppNav() {
           <Link
             href="/hub"
             aria-current={isActive("/hub") ? "page" : undefined}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-[#2A3170] bg-[#2A3170] px-3 text-[9px] font-semibold tracking-[0.13em] text-[#F0E9DA] shadow-[0_8px_22px_rgba(42,49,112,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1F2860] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/45 sm:h-11 sm:px-5 sm:text-[11px] sm:tracking-[0.16em]"
+            className={`inline-flex h-10 items-center justify-center rounded-xl border px-2.5 text-[9px] font-semibold tracking-[0.11em] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/45 sm:h-11 sm:px-4 sm:text-[11px] sm:tracking-[0.14em] ${
+              isActive("/hub")
+                ? "border-[#58A6A1] bg-[#58A6A1]/14 text-[#2D7774] dark:text-[#86CBC7]"
+                : "border-[#58A6A1]/70 bg-transparent text-[#2D7774] hover:-translate-y-0.5 hover:bg-[#58A6A1]/10 dark:text-[#86CBC7]"
+            }`}
           >
             <span className="sm:hidden">STUDIO</span>
             <span className="hidden sm:inline">MY STUDIO</span>

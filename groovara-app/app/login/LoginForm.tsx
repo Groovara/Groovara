@@ -29,7 +29,12 @@ export default function LoginForm({
     if (codeFromUrl) params.set("code", codeFromUrl);
 
     const query = params.toString();
-    window.location.href = query ? `/google?${query}` : "/google";
+
+    // Google authenticates first. The OAuth callback decides whether this
+    // account has already redeemed beta access or needs the one-time code gate.
+    window.location.href = query
+      ? `/auth/google/start?${query}`
+      : "/auth/google/start";
   };
 
   const signupParams = new URLSearchParams();

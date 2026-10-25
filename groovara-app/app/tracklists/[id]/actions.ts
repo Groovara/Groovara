@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   createMixlistFromTracklistSchema,
   type CreateMixlistFromTracklistInput,
@@ -12,6 +13,10 @@ import { RATE_LIMITS } from "@/lib/security/rateLimitConfig";
 import { writeAuditLog } from "@/lib/security/auditLog";
 import { LIMITS } from "@/lib/validation/limits";
 import { validateTextField, normalizeUserText } from "@/lib/validation/text";
+import {
+  GROOVARA_MEDIA_BUCKET,
+  parseUploadedMediaPath,
+} from "@/lib/uploadedMedia";
 
 
 type ValidationResult =
@@ -89,7 +94,7 @@ async function verifySongOwnership(
 ) {
   const { data, error } = await supabase
     .from("tracklist_songs")
-    .select("id,title,position")
+    .select("id,title,position,platform,track_id")
     .eq("id", songId)
     .eq("tracklist_id", tracklistId)
     .maybeSingle();
@@ -131,22 +136,9 @@ const updateTracklistMetadataSchema = z.object({
     },
     z.string().max(1000).nullable()
   ),
-  finishing_note: z.preprocess(
-    (value) => {
-      if (typeof value !== "string") return value;
-      const normalized = normalizeUserText(value);
-      return normalized.trim() === "" ? null : normalized;
-    },
-    z.string()
-      .max(
-        LIMITS.finishingNote,
-        `Finishing note is too long. Maximum is ${LIMITS.finishingNote.toLocaleString()} characters.`
-      )
-      .nullable()
-  ),
 });
 
-const trackSongSchema = z.object({
+const baseTrackSongFields = {
   tracklistId: z.string().uuid("Invalid tracklist id."),
   platform: z.string().trim().min(1).max(50),
   track_id: z.string().trim().min(1).max(200),
@@ -160,7 +152,6 @@ const trackSongSchema = z.object({
     },
     z.string().max(200).nullable()
   ),
-  url: z.string().trim().url("URL must be valid.").max(2048),
   isrc: z.preprocess(
     (value) => {
       if (typeof value !== "string") return null;
@@ -174,13 +165,132 @@ const trackSongSchema = z.object({
     },
     z.string().max(32).nullable(),
   ),
+};
+
+const providerTrackSongSchema = z.object({
+  ...baseTrackSongFields,
+  // Search/manual provider entries use ordinary web URLs.
+  url: z.string().trim().url("URL must be valid.").max(2048),
 });
+
+const uploadedTrackSongSchema = z
+  .object({
+    ...baseTrackSongFields,
+    platform: z.literal("upload"),
+    // Uploaded recordings intentionally use Groovara's private-media scheme,
+    // not an HTTPS Spotify/YouTube/Apple link.
+    url: z.string().trim().min(1, "Uploaded media reference is required.").max(2048),
+    isrc: z.null().optional().default(null),
+  })
+  .superRefine((song, ctx) => {
+    const uploadedPath = parseUploadedMediaPath(song.url);
+
+    if (!uploadedPath) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["url"],
+        message: "Uploaded media reference is invalid.",
+      });
+      return;
+    }
+
+    if (uploadedPath !== song.track_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["track_id"],
+        message: "Uploaded media path does not match the stored file.",
+      });
+    }
+  });
+
+function isUploadTrackInput(value: unknown): boolean {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "platform" in value &&
+    (value as { platform?: unknown }).platform === "upload"
+  );
+}
+
+const uploadedMixlistSongSchema = z
+  .object({
+    position: z.number().int().min(0),
+    platform: z.literal("upload"),
+    track_id: z.string().trim().min(1).max(200),
+    title: z.string().trim().min(1).max(300),
+    artist: z.string().trim().min(1).max(200),
+    album: z.preprocess(
+      (value) => {
+        if (typeof value !== "string") return value;
+        const trimmed = value.trim();
+        return trimmed === "" ? null : trimmed;
+      },
+      z.string().max(200).nullable(),
+    ),
+    url: z.string().trim().min(1).max(2048),
+    isrc: z.null().optional().default(null),
+    note: z.preprocess(
+      (value) => {
+        if (typeof value !== "string") return value ?? null;
+        const normalized = normalizeUserText(value);
+        return normalized.trim() === "" ? null : normalized;
+      },
+      z.string().max(LIMITS.songNote).nullable(),
+    ),
+  })
+  .superRefine((song, ctx) => {
+    const uploadedPath = parseUploadedMediaPath(song.url);
+
+    if (!uploadedPath) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["url"],
+        message: "Uploaded media reference is invalid.",
+      });
+      return;
+    }
+
+    if (uploadedPath !== song.track_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["track_id"],
+        message: "Uploaded media path does not match the stored file.",
+      });
+    }
+  });
+
+function isUploadSong(value: unknown): value is Record<string, unknown> & {
+  platform: "upload";
+} {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "platform" in value &&
+    value.platform === "upload"
+  );
+}
+
+type MixlistSongForAction = {
+  position: number;
+  platform: string;
+  track_id: string;
+  title: string;
+  artist: string;
+  album: string | null;
+  url: string;
+  isrc: string | null;
+  note: string | null;
+};
+
+type MixlistInputForAction = Omit<CreateMixlistFromTracklistInput, "songs"> & {
+  songs: MixlistSongForAction[];
+};
 
 const updateSongPlatformSchema = z.object({
   tracklistId: z.string().uuid("Invalid tracklist id."),
   songId: z.string().uuid("Invalid song id."),
   platform: z.enum(["spotify", "youtube", "apple"]),
-  track_id: z.string().trim().min(1, "Track id is required.").max(200),
+  track_id: z.string().trim().min(1).max(200),
   url: z.string().trim().url("URL must be valid.").max(2048),
 });
 
@@ -229,20 +339,180 @@ const multiNoteSchema = z.object({
 
 
 
-export async function createMixlistFromTracklistAction(
+const submitDiscoveryCandidateSchema = z.object({
+  mixlistId: z.string().uuid("Invalid Mixlist id."),
+});
+
+export async function submitDiscoveryCandidateAction(
   rawInput: unknown
-): Promise<MixlistActionResult> {
-  const parsed = createMixlistFromTracklistSchema.safeParse(rawInput);
+): Promise<OkResult | ValidationResult> {
+  const parsed = submitDiscoveryCandidateSchema.safeParse(rawInput);
 
   if (!parsed.success) {
     return validationFailure(parsed.error);
   }
 
-  const input: CreateMixlistFromTracklistInput = parsed.data;
+  const { mixlistId } = parsed.data;
+  const { supabase, user, error: authError } = await getAuthedUser();
+
+  if (authError || !user) {
+    return { ok: false, type: "auth", message: "Not authenticated." };
+  }
+
+  const { data: mixlist, error: mixlistError } = await supabase
+    .from("mixlists")
+    .select("id,owner_user_id,is_public")
+    .eq("id", mixlistId)
+    .eq("owner_user_id", user.id)
+    .maybeSingle();
+
+  if (mixlistError) {
+    return {
+      ok: false,
+      type: "db",
+      message:
+        mixlistError.message ?? "Failed to verify Mixlist ownership.",
+    };
+  }
+
+  if (!mixlist) {
+    return {
+      ok: false,
+      type: "not_found",
+      message: "Mixlist not found or you do not have access to it.",
+    };
+  }
+
+  if (!mixlist.is_public) {
+    return validationFailure(
+      "A Mixlist must be public before it can be submitted to Discovery."
+    );
+  }
+
+  const now = new Date().toISOString();
+  const admin = createAdminClient();
+
+  /*
+   * The caller has already been authenticated above and we have verified that
+   * this exact user owns this exact public Mixlist. Use the server-only service
+   * role for the moderation-queue write so the submission is not dependent on
+   * discovery_candidates RLS behavior.
+   */
+  const { error } = await admin
+    .from("discovery_candidates")
+    .upsert(
+      {
+        mixlist_id: mixlistId,
+        submitted_by: user.id,
+        status: "pending",
+        is_legacy: false,
+        submitted_at: now,
+        updated_at: now,
+      },
+      { onConflict: "mixlist_id" },
+    );
+
+  if (error) {
+    console.error("Discovery candidate upsert failed:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      mixlistId,
+      userId: user.id,
+    });
+
+    return {
+      ok: false,
+      type: "db",
+      message: error.message ?? "Failed to submit Mixlist to Discovery.",
+    };
+  }
+
+  revalidatePath("/discover");
+  revalidatePath("/discover/admin");
+
+  return { ok: true };
+}
+
+
+export async function createMixlistFromTracklistAction(
+  rawInput: unknown
+): Promise<MixlistActionResult> {
+  const rawRecord =
+    typeof rawInput === "object" && rawInput !== null
+      ? (rawInput as Record<string, unknown>)
+      : null;
+  const rawSongs = Array.isArray(rawRecord?.songs)
+    ? rawRecord.songs
+    : [];
+
+  /*
+   * The shared Mixlist validator predates Groovara-hosted media and requires
+   * provider-style HTTPS URLs. Keep using it for the Mixlist envelope and for
+   * Spotify/YouTube/Apple songs, but substitute a harmless validation-only
+   * YouTube identity for upload rows. We restore and separately validate the
+   * real groovara-upload:// rows immediately afterward.
+   */
+  const schemaInput = rawRecord
+    ? {
+        ...rawRecord,
+        songs: rawSongs.map((song) =>
+          isUploadSong(song)
+            ? {
+                ...song,
+                platform: "youtube",
+                track_id: "dQw4w9WgXcQ",
+                url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                isrc: null,
+              }
+            : song,
+        ),
+      }
+    : rawInput;
+
+  const parsed = createMixlistFromTracklistSchema.safeParse(schemaInput);
+
+  if (!parsed.success) {
+    return validationFailure(parsed.error);
+  }
+
+  const songs: MixlistSongForAction[] = [];
+
+  for (let index = 0; index < parsed.data.songs.length; index += 1) {
+    const rawSong = rawSongs[index];
+
+    if (isUploadSong(rawSong)) {
+      const uploaded = uploadedMixlistSongSchema.safeParse(rawSong);
+
+      if (!uploaded.success) {
+        return validationFailure(uploaded.error);
+      }
+
+      songs.push(uploaded.data);
+      continue;
+    }
+
+    const song = parsed.data.songs[index];
+    songs.push({
+      position: song.position,
+      platform: song.platform,
+      track_id: song.track_id,
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      url: song.url,
+      isrc: song.isrc ?? null,
+      note: song.note ?? null,
+    });
+  }
+
+  const input: MixlistInputForAction = {
+    ...parsed.data,
+    songs,
+  };
   const normalizedMessage = normalizeUserText(input.message ?? "");
   const normalizedFinishingNote = normalizeUserText(input.finishing_note ?? "");
-  const normalizedRecipient = normalizeUserText(input.recipient_name ?? "");
-  const normalizedSender = normalizeUserText(input.sender_name ?? "");
   const { supabase, user, error: authError } = await getAuthedUser();
 
   if (authError || !user) {
@@ -293,14 +563,7 @@ export async function createMixlistFromTracklistAction(
       is_public: input.is_public,
       finishing_note:
         normalizedFinishingNote.trim() === "" ? null : normalizedFinishingNote,
-      recipient_name:
-        normalizedRecipient.trim() === "" ? null : normalizedRecipient,
-      sender_name: normalizedSender.trim() === "" ? null : normalizedSender,
-      show_recipient: input.show_recipient,
-      show_sender: input.show_sender,
-      show_date: input.show_date,
       include_song_notes: input.include_song_notes,
-      allow_copy_to_studio: input.allow_copy_to_studio,
     })
     .select("id")
     .single();
@@ -322,10 +585,6 @@ export async function createMixlistFromTracklistAction(
     metadata: {
       sourceTracklistId: input.source_tracklist_id,
       songCount: input.songs.length,
-      showRecipient: input.show_recipient,
-      showSender: input.show_sender,
-      showDate: input.show_date,
-      allowCopyToStudio: input.allow_copy_to_studio,
       source: "app/tracklists/[id]/actions.ts",
     },
   });
@@ -370,7 +629,7 @@ export async function updateTracklistMetadataAction(rawInput: unknown): Promise<
     return validationFailure(parsed.error);
   }
 
-  const { tracklistId, title, description, finishing_note } = parsed.data;
+  const { tracklistId, title, description } = parsed.data;
   const { supabase, user, error: authError } = await getAuthedUser();
 
   if (authError || !user) {
@@ -387,7 +646,7 @@ export async function updateTracklistMetadataAction(rawInput: unknown): Promise<
 
   const { error } = await supabase
     .from("tracklists")
-    .update({ title, description, finishing_note })
+    .update({ title, description })
     .eq("id", tracklistId);
 
   if (error) {
@@ -400,8 +659,16 @@ export async function updateTracklistMetadataAction(rawInput: unknown): Promise<
   return { ok: true };
 }
 
-export async function addSongToTracklistAction(rawInput: unknown): Promise<OkResult | ValidationResult> {
-  const parsed = trackSongSchema.safeParse(rawInput);
+export async function addSongToTracklistAction(
+  rawInput: unknown
+): Promise<OkResult | ValidationResult> {
+  /*
+   * IMPORTANT: uploaded recordings bypass provider-link validation entirely.
+   * Their URL is a private `groovara-upload://...` reference by design.
+   */
+  const parsed = isUploadTrackInput(rawInput)
+    ? uploadedTrackSongSchema.safeParse(rawInput)
+    : providerTrackSongSchema.safeParse(rawInput);
 
   if (!parsed.success) {
     return validationFailure(parsed.error);
@@ -482,7 +749,7 @@ export async function addManualSongToTracklistAction(rawInput: unknown): Promise
 }
 
 export async function updateTracklistSongPlatformAction(
-  rawInput: unknown,
+  rawInput: unknown
 ): Promise<OkResult | ValidationResult> {
   const parsed = updateSongPlatformSchema.safeParse(rawInput);
 
@@ -490,34 +757,24 @@ export async function updateTracklistSongPlatformAction(
     return validationFailure(parsed.error);
   }
 
-  const {
-    tracklistId,
-    songId,
-    platform,
-    track_id,
-    url,
-  } = parsed.data;
-
+  const { tracklistId, songId, platform, track_id, url } = parsed.data;
   const { supabase, user, error: authError } = await getAuthedUser();
 
   if (authError || !user) {
     return { ok: false, type: "auth", message: "Not authenticated." };
   }
 
-  const { data: owned, error: ownErr } =
-    await verifyTracklistOwnership(
-      supabase,
-      tracklistId,
-      user.id,
-    );
+  const { data: owned, error: ownErr } = await verifyTracklistOwnership(
+    supabase,
+    tracklistId,
+    user.id
+  );
 
   if (ownErr) {
     return {
       ok: false,
       type: "db",
-      message:
-        ownErr.message ??
-        "Failed to verify tracklist ownership.",
+      message: ownErr.message ?? "Failed to verify tracklist ownership.",
     };
   }
 
@@ -525,25 +782,21 @@ export async function updateTracklistSongPlatformAction(
     return {
       ok: false,
       type: "not_found",
-      message:
-        "Tracklist not found or you do not have access to it.",
+      message: "Tracklist not found or you do not have access to it.",
     };
   }
 
-  const { data: song, error: songErr } =
-    await verifySongOwnership(
-      supabase,
-      tracklistId,
-      songId,
-    );
+  const { data: song, error: songErr } = await verifySongOwnership(
+    supabase,
+    tracklistId,
+    songId
+  );
 
   if (songErr) {
     return {
       ok: false,
       type: "db",
-      message:
-        songErr.message ??
-        "Failed to verify song ownership.",
+      message: songErr.message ?? "Failed to verify song ownership.",
     };
   }
 
@@ -552,6 +805,16 @@ export async function updateTracklistSongPlatformAction(
       ok: false,
       type: "not_found",
       message: "Song not found in this tracklist.",
+    };
+  }
+
+  if (song.platform === "upload") {
+    return {
+      ok: false,
+      type: "validation",
+      message: "Uploaded recordings cannot be converted to another platform.",
+      fieldErrors: {},
+      formErrors: ["Uploaded recordings cannot be converted to another platform."],
     };
   }
 
@@ -569,9 +832,7 @@ export async function updateTracklistSongPlatformAction(
     return {
       ok: false,
       type: "db",
-      message:
-        error.message ??
-        "Failed to save the converted song.",
+      message: error.message ?? "Failed to update the song platform.",
     };
   }
 
@@ -613,6 +874,40 @@ export async function removeSongFromTracklistAction(rawInput: unknown): Promise<
 
   if (error) {
     return { ok: false, type: "db", message: error.message ?? "Failed to remove song." };
+  }
+
+  if (song.platform === "upload" && song.track_id) {
+    // A published Mixlist (or a copied Studio Tracklist) can reference the same
+    // upload. Only remove the Storage object when this was the final reference.
+    const [{ data: remainingTrackRef }, { data: remainingMixRef }] =
+      await Promise.all([
+        supabase
+          .from("tracklist_songs")
+          .select("id")
+          .eq("platform", "upload")
+          .eq("track_id", song.track_id)
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("mixlist_songs")
+          .select("id")
+          .eq("platform", "upload")
+          .eq("track_id", song.track_id)
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+    if (!remainingTrackRef && !remainingMixRef) {
+      const { error: storageError } = await supabase.storage
+        .from(GROOVARA_MEDIA_BUCKET)
+        .remove([song.track_id]);
+
+      // Do not put the deleted database row back if Storage cleanup fails. The
+      // orphan can be cleaned later; the user's tracklist operation succeeded.
+      if (storageError) {
+        console.error("Failed to remove uploaded media object", storageError);
+      }
+    }
   }
 
   const { error: reindexError } = await reindexTracklistSongs(supabase, tracklistId);

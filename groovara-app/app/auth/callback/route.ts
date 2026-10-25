@@ -1,20 +1,43 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { trackServerEvent } from "@/lib/analyticsServer";
 
-const GOOGLE_BETA_COOKIE = "groovara_google_beta_code";
+function normalizeNext(rawNext: string | null): string {
+  if (!rawNext) return "/hub";
+
+  const trimmed = rawNext.trim();
+
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) {
+    return "/hub";
+  }
+
+  return trimmed;
+}
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
   const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next") ?? "/hub";
+  const next = normalizeNext(url.searchParams.get("next"));
+  const betaCode =
+    url.searchParams.get("beta_code")?.trim() ?? "";
 
   if (!code) {
-    return NextResponse.redirect(new URL("/login?error=no_code", url.origin));
+    return NextResponse.redirect(
+      new URL("/login?error=no_code", url.origin),
+    );
   }
 
-  const response = NextResponse.redirect(new URL(next, url.origin));
+  // Default destination for a newly authenticated Google account is the
+  // one-time beta gate. Supabase writes the OAuth session cookies onto this
+  // response while exchanging the code below.
+  const gateUrl = new URL("/google", url.origin);
+  gateUrl.searchParams.set("next", next);
+
+  if (betaCode) {
+    gateUrl.searchParams.set("code", betaCode);
+  }
+
+  const response = NextResponse.redirect(gateUrl);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,12 +56,17 @@ export async function GET(request: NextRequest) {
     }
   );
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { error } =
+    await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
     console.error("OAuth callback exchange failed:", error);
+
     return NextResponse.redirect(
-      new URL(`/login?error=${encodeURIComponent(error.message)}`, url.origin)
+      new URL(
+        `/login?error=${encodeURIComponent(error.message)}`,
+        url.origin,
+      ),
     );
   }
 
@@ -47,102 +75,46 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL("/login?error=no_user", url.origin));
+    return NextResponse.redirect(
+      new URL("/login?error=no_user", url.origin),
+    );
   }
 
   const admin = createAdminClient();
 
-  // If user already has a redemption, they're allowed in.
-  const { data: existingRedemption } = await admin
+  // Returning Google users who have already redeemed beta access never see
+  // the code gate again.
+  const {
+    data: existingRedemption,
+    error: redemptionLookupError,
+  } = await admin
     .from("beta_code_redemptions")
     .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (existingRedemption) {
-    response.cookies.delete(GOOGLE_BETA_COOKIE);
+  if (redemptionLookupError) {
+    console.error(
+      "Failed to check Google beta redemption:",
+      redemptionLookupError,
+    );
+
+    gateUrl.searchParams.set(
+      "error",
+      "beta_status_check_failed",
+    );
+    response.headers.set("Location", gateUrl.toString());
     return response;
   }
 
-  // Otherwise they must have just passed the beta-code gate.
-  const betaCode = request.cookies.get(GOOGLE_BETA_COOKIE)?.value ?? null;
-
-  if (!betaCode) {
-    await supabase.auth.signOut();
-    const denied = NextResponse.redirect(
-      new URL("/beta?error=beta_required", url.origin)
+  if (existingRedemption) {
+    response.headers.set(
+      "Location",
+      new URL(next, url.origin).toString(),
     );
-    denied.cookies.delete(GOOGLE_BETA_COOKIE);
-    return denied;
+    return response;
   }
 
-  const { data: codeRow, error: codeError } = await admin
-    .from("beta_codes")
-    .select("id, code, is_active, max_uses, used_count, expires_at")
-    .eq("code", betaCode)
-    .maybeSingle();
-
-  if (
-    codeError ||
-    !codeRow ||
-    !codeRow.is_active ||
-    (codeRow.expires_at && new Date(codeRow.expires_at) <= new Date()) ||
-    codeRow.used_count >= codeRow.max_uses
-  ) {
-    await supabase.auth.signOut();
-    const denied = NextResponse.redirect(
-      new URL("/beta?error=invalid_beta_code", url.origin)
-    );
-    denied.cookies.delete(GOOGLE_BETA_COOKIE);
-    return denied;
-  }
-
-  const { error: redemptionError } = await admin
-    .from("beta_code_redemptions")
-    .insert({
-      code_id: codeRow.id,
-      user_id: user.id,
-    });
-
-  if (redemptionError) {
-    console.error("Google OAuth beta redemption failed:", redemptionError);
-    await supabase.auth.signOut();
-    const denied = NextResponse.redirect(
-      new URL("/beta?error=redemption_failed", url.origin)
-    );
-    denied.cookies.delete(GOOGLE_BETA_COOKIE);
-    return denied;
-  }
-
-  const nextUsedCount = codeRow.used_count + 1;
-
-  const { error: updateError } = await admin
-    .from("beta_codes")
-    .update({
-      used_count: nextUsedCount,
-      last_used_at: new Date().toISOString(),
-    })
-    .eq("id", codeRow.id);
-
-  if (updateError) {
-    console.error("Google OAuth beta usage update failed:", updateError);
-    await supabase.auth.signOut();
-    const denied = NextResponse.redirect(
-      new URL("/beta?error=usage_update_failed", url.origin)
-    );
-    denied.cookies.delete(GOOGLE_BETA_COOKIE);
-    return denied;
-  }
-
-  // Track only successful, newly-consumed beta codes.
-  await trackServerEvent("beta_code_redeemed", user.id, {
-    beta_code: codeRow.code,
-    beta_code_id: codeRow.id,
-    signup_method: "google",
-    used_count: nextUsedCount,
-    max_uses: codeRow.max_uses,
-  });
-
-  response.cookies.delete(GOOGLE_BETA_COOKIE);
+  // First-time Google users stay signed in and are sent to the one-time gate.
   return response;
 }

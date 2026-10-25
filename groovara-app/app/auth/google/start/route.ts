@@ -20,12 +20,21 @@ export async function GET(request: NextRequest) {
   const next = normalizeNext(
     request.nextUrl.searchParams.get("next"),
   );
+  const betaCode =
+    request.nextUrl.searchParams.get("code")?.trim() ?? "";
 
   const callbackUrl = new URL(
     "/auth/callback",
     request.nextUrl.origin,
   );
   callbackUrl.searchParams.set("next", next);
+
+  // If an invite link supplied a code, carry it through OAuth only as a
+  // convenience so the post-auth gate can prefill it. It is not trusted or
+  // redeemed until after Google authentication succeeds.
+  if (betaCode) {
+    callbackUrl.searchParams.set("beta_code", betaCode);
+  }
 
   const supabase = await createClient();
 
@@ -49,6 +58,10 @@ export async function GET(request: NextRequest) {
       error?.message ?? "google_oauth_start_failed",
     );
     loginUrl.searchParams.set("next", next);
+
+    if (betaCode) {
+      loginUrl.searchParams.set("code", betaCode);
+    }
 
     return NextResponse.redirect(loginUrl);
   }

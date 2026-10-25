@@ -33,14 +33,26 @@ export default function AppNav() {
         pathname.startsWith("/tracklists/")
       );
     }
+
+    if (href === "/settings") {
+      return pathname === "/settings" || pathname.startsWith("/settings/");
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
   };
 
   const items: MenuItem[] = [
     {
       type: "link",
-      label: "Studio",
+      label: "My Studio",
       description: "Shape songs, notes, and pacing",
       href: "/hub",
+    },
+    {
+      type: "link",
+      label: "Discovery",
+      description: "Browse Mixlists selected by Groovara",
+      href: "/discover",
     },
     { type: "divider" },
     {
@@ -105,61 +117,84 @@ export default function AppNav() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-[2147483646] isolate">
-      <div className="gv-nav-surface h-14 px-5 flex items-center justify-between">
-        {/* Groovara 3-2 ring motif */}
+      <div className="gv-nav-surface flex h-24 items-center justify-between gap-3 px-3 sm:h-28 sm:px-6 lg:px-8">
         <div aria-hidden="true" className="gv-nav-corner-rings" />
 
-        <div ref={wrapRef} className="relative flex items-center gap-3">
+        <div ref={wrapRef} className="relative z-10 min-w-0">
           <button
-            onClick={() => setOpen((v) => !v)}
-            className="group flex select-none items-center gap-3 rounded-full px-1.5 py-1 transition hover:bg-[#2A3170]/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3170]/45 dark:hover:bg-white/[0.07] dark:focus-visible:ring-[#B4B8C0]/45"
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            className="group flex min-w-0 select-none items-center gap-2 rounded-2xl px-1.5 py-1.5 text-left transition hover:bg-[#2A3170]/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/45 dark:hover:bg-white/[0.07]"
             aria-haspopup="menu"
             aria-expanded={open}
+            aria-label={open ? "Close navigation menu" : "Open navigation menu"}
           >
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-[#2A3170]/[0.08] ring-1 ring-[#2A3170]/15 transition group-hover:bg-[#2A3170]/[0.12] dark:bg-white/[0.07] dark:ring-white/10 dark:group-hover:bg-white/[0.11]">
+            <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[24%] transition sm:h-16 sm:w-16">
               <Image
-                src="/groovara-icon-v2.png"
+                src="/groovara-logo-light.png"
                 alt="Groovara logo"
-                width={22}
-                height={22}
-                className="h-[22px] w-[22px] opacity-90"
+                fill
+                sizes="64px"
+                className="object-cover dark:hidden"
+                priority
+              />
+              <Image
+                src="/groovara-logo-dark.png"
+                alt=""
+                aria-hidden="true"
+                fill
+                sizes="64px"
+                className="hidden object-cover dark:block"
                 priority
               />
             </span>
 
-            <span className="flex items-baseline gap-2">
-              <span className="gv-brand-mark text-[13px] font-semibold tracking-[0.42em] text-[#1F2860] dark:text-[#B4B8C0]">
+            <span className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <span className="gv-brand-mark truncate text-[17px] font-semibold tracking-[0.24em] text-[#1F2860] sm:text-[24px] sm:tracking-[0.30em] lg:text-[27px] dark:text-[#B4B8C0]">
                 GROOVARA
               </span>
 
-              <span className="hidden text-[10px] font-medium tracking-[0.22em] text-[#2A3170]/75 dark:text-[#B4B8C0]/65 sm:inline">
-                beta
-              </span>
+              {APP_VERSION ? (
+                <span className="shrink-0 rounded-full border border-[#58A6A1] bg-transparent px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#2D7774] transition group-hover:bg-[#58A6A1]/10 sm:px-3 sm:py-1.5 sm:text-[10px] dark:text-[#86CBC7]">
+                  BETA {APP_VERSION}
+                </span>
+              ) : (
+                <span className="shrink-0 rounded-full border border-[#58A6A1] bg-transparent px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#2D7774] transition group-hover:bg-[#58A6A1]/10 sm:px-3 sm:py-1.5 sm:text-[10px] dark:text-[#86CBC7]">
+                  BETA
+                </span>
+              )}
             </span>
 
             <span
               aria-hidden="true"
-              className={`text-xs text-[#2A3170]/80 transition-transform dark:text-[#B4B8C0]/75 ${
-                open ? "rotate-180" : "rotate-0"
-              }`}
+              className="ml-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#2A3170]/15 bg-[#F0E9DA]/35 text-[#1F2860] transition group-hover:border-[#58A6A1]/45 group-hover:bg-[#58A6A1]/8 dark:border-white/10 dark:bg-white/[0.035] dark:text-[#B4B8C0]"
             >
-              ▾
+              <span className="flex h-4 w-5 flex-col justify-between">
+                <span
+                  className={`h-[2px] w-5 rounded-full bg-current transition-transform ${
+                    open ? "translate-y-[7px] rotate-45" : ""
+                  }`}
+                />
+                <span
+                  className={`h-[2px] w-5 rounded-full bg-current transition-opacity ${
+                    open ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+                <span
+                  className={`h-[2px] w-5 rounded-full bg-current transition-transform ${
+                    open ? "-translate-y-[7px] -rotate-45" : ""
+                  }`}
+                />
+              </span>
             </span>
           </button>
 
-          {APP_VERSION && (
-            <div className="hidden rounded-full border border-[#2A3170]/25 bg-[#2A3170]/10 px-3 py-1 text-[10px] tracking-[0.18em] text-[#1F2860] select-none sm:block dark:border-white/15 dark:bg-white/10 dark:text-[#B4B8C0]">
-              {APP_VERSION}
-            </div>
-          )}
-
-          {open && (
+          {open ? (
             <div
               role="menu"
-              className="fixed top-12 left-0 z-[2147483647] w-72 overflow-hidden rounded-r-3xl border border-[#B4B8C0] bg-[#F0E9DA]/98 p-3 text-[#1A1A23] shadow-[0_18px_42px_rgba(64,47,31,0.22)] backdrop-blur-xl dark:border-white/10 dark:bg-[#1A1A23]/95 dark:text-white dark:shadow-[0_18px_42px_rgba(0,0,0,0.45)]"
+              className="fixed left-0 top-24 z-[2147483647] max-h-[calc(100dvh-6rem)] w-[min(19rem,calc(100vw-0.75rem))] overflow-y-auto rounded-br-3xl border border-[#B4B8C0] bg-[#F0E9DA]/98 p-3 text-[#1A1A23] shadow-[0_18px_42px_rgba(64,47,31,0.22)] backdrop-blur-xl sm:top-28 sm:max-h-[calc(100dvh-7rem)] dark:border-white/10 dark:bg-[#1A1A23]/95 dark:text-white dark:shadow-[0_18px_42px_rgba(0,0,0,0.45)]"
             >
               <div className="pointer-events-none absolute -right-10 -top-14 h-36 w-36 rounded-full border-[11px] border-[#2A3170]/[0.08] dark:border-[#B4B8C0]/[0.07]" />
-
               <div className="pointer-events-none absolute -left-14 bottom-2 h-28 w-28 rounded-full border-[9px] border-[#2A3170]/[0.055] dark:border-[#B4B8C0]/[0.045]" />
 
               <div className="relative py-1">
@@ -207,9 +242,9 @@ export default function AppNav() {
                       href={it.href}
                       role="menuitem"
                       onClick={() => setOpen(false)}
-                      className={`block rounded-2xl px-4 py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3170]/35 dark:focus-visible:ring-[#B4B8C0]/35 ${
+                      className={`block rounded-2xl px-4 py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/40 ${
                         active
-                          ? "bg-[#2A3170] text-[#F0E9DA] shadow-[0_10px_26px_rgba(87,87,127,0.24)] dark:bg-[#B4B8C0]/15 dark:text-[#B4B8C0] dark:shadow-[0_10px_26px_rgba(0,0,0,0.24)]"
+                          ? "bg-[#2A3170] text-[#F0E9DA] shadow-[0_10px_26px_rgba(42,49,112,0.24)] dark:bg-[#B4B8C0]/15 dark:text-[#B4B8C0] dark:shadow-[0_10px_26px_rgba(0,0,0,0.24)]"
                           : "text-[#1A1A23] hover:bg-[#2A3170]/12 hover:text-[#1F2860] dark:text-white/85 dark:hover:bg-white/10 dark:hover:text-white"
                       }`}
                     >
@@ -217,7 +252,7 @@ export default function AppNav() {
                         {it.label}
                       </span>
 
-                      {it.description && (
+                      {it.description ? (
                         <span
                           className={`mt-0.5 block text-xs leading-snug ${
                             active
@@ -227,18 +262,72 @@ export default function AppNav() {
                         >
                           {it.description}
                         </span>
-                      )}
+                      ) : null}
                     </Link>
                   );
                 })}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
-        <div className="relative z-10 flex items-center rounded-full border border-[#2A3170]/20 bg-[#F0E9DA]/75 px-1.5 py-1 shadow-[0_8px_22px_rgba(64,47,31,0.10)] dark:border-white/10 dark:bg-white/[0.04]">
-          <ThemeToggle />
-        </div>
+        <nav
+          aria-label="Primary account actions"
+          className="relative z-10 flex shrink-0 items-center gap-1.5 sm:gap-2.5"
+        >
+          <Link
+            href="/discover"
+            aria-current={isActive("/discover") ? "page" : undefined}
+            className={`inline-flex h-10 items-center justify-center rounded-xl border px-2.5 text-[9px] font-semibold tracking-[0.11em] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/45 sm:h-11 sm:px-4 sm:text-[11px] sm:tracking-[0.14em] ${
+              isActive("/discover")
+                ? "border-[#58A6A1] bg-[#58A6A1]/14 text-[#2D7774] dark:text-[#86CBC7]"
+                : "border-[#58A6A1]/70 bg-transparent text-[#2D7774] hover:-translate-y-0.5 hover:bg-[#58A6A1]/10 dark:text-[#86CBC7]"
+            }`}
+          >
+            <span className="sm:hidden">DISCOVER</span>
+            <span className="hidden sm:inline">DISCOVERY</span>
+          </Link>
+
+          <Link
+            href="/hub"
+            aria-current={isActive("/hub") ? "page" : undefined}
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-[#2A3170] bg-[#2A3170] px-3 text-[9px] font-semibold tracking-[0.13em] text-[#F0E9DA] shadow-[0_8px_22px_rgba(42,49,112,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1F2860] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/45 sm:h-11 sm:px-5 sm:text-[11px] sm:tracking-[0.16em]"
+          >
+            <span className="sm:hidden">STUDIO</span>
+            <span className="hidden sm:inline">MY STUDIO</span>
+          </Link>
+
+          <Link
+            href="/settings"
+            aria-label="Settings"
+            title="Settings"
+            aria-current={isActive("/settings") ? "page" : undefined}
+            className={`hidden h-10 w-10 place-items-center rounded-xl border transition sm:grid focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/45 sm:h-11 sm:w-11 ${
+              isActive("/settings")
+                ? "border-[#58A6A1] bg-[#58A6A1]/12 text-[#2D7774] dark:text-[#86CBC7]"
+                : "border-[#2A3170]/20 bg-[#F0E9DA]/65 text-[#1F2860] hover:border-[#58A6A1]/55 hover:bg-[#58A6A1]/8 dark:border-white/10 dark:bg-white/[0.04] dark:text-[#B4B8C0]"
+            }`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              aria-hidden="true"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06L7.06 3.8l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 9c.17.37.47.69.84.88.25.13.53.2.82.22H21v4h-.1A1.7 1.7 0 0 0 19.4 15Z" />
+            </svg>
+          </Link>
+
+          <div className="flex h-10 items-center rounded-xl border border-[#2A3170]/20 bg-[#F0E9DA]/75 px-1 shadow-[0_8px_22px_rgba(64,47,31,0.10)] sm:h-11 sm:px-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+            <ThemeToggle />
+          </div>
+        </nav>
       </div>
     </header>
   );

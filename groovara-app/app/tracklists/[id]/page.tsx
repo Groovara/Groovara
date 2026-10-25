@@ -18,11 +18,13 @@ import {
   moveTracklistSongAction,
   removeSongFromTracklistAction,
   saveTracklistSongNoteAction,
+  submitDiscoveryCandidateAction,
   updateTracklistMetadataAction,
   updateTracklistSongPlatformAction,
 } from "./actions";
 import { deleteTracklistAction } from "../actions";
 import CharacterCounter from "@/lib/CharacterCounter";
+import type { UploadedMediaRecord } from "@/lib/LocalMediaUpload";
 import {
   convertTrackPlatform,
   type Platform as ConversionPlatform,
@@ -31,7 +33,6 @@ import {
 type Tracklist = {
   id: string;
   title: string;
-  description: string | null;
   finishing_note: string | null;
 };
 
@@ -257,7 +258,6 @@ export default function TracklistDetailPage() {
 
   const [item, setItem] = useState<Tracklist | null>(null);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -272,6 +272,8 @@ export default function TracklistDetailPage() {
   const [creatingMix, setCreatingMix] = useState(false);
   const [mixFinish, setMixFinish] = useState("");
   const [mixIsPublic, setMixIsPublic] = useState(true);
+  const [mixDiscoverable, setMixDiscoverable] = useState(false);
+  const [showDiscoveryConfirm, setShowDiscoveryConfirm] = useState(false);
   const [includeSongNotes, setIncludeSongNotes] = useState(true);
   const [mixRecipient, setMixRecipient] = useState("");
   const [mixSender, setMixSender] = useState("");
@@ -305,7 +307,6 @@ export default function TracklistDetailPage() {
   const selectedCount = selectedIds.size;
 
   const SONG_NOTE_LIMIT = 2000;
-  const DESCRIPTION_LIMIT = 1000;
   const FINISHING_NOTE_LIMIT = 1000;
 
   const busy =
@@ -420,7 +421,7 @@ export default function TracklistDetailPage() {
 
       const { data, error } = await supabase
         .from("tracklists")
-        .select("id,title,description,finishing_note")
+        .select("id,title,finishing_note")
         .eq("id", id)
         .single();
 
@@ -433,7 +434,6 @@ export default function TracklistDetailPage() {
       const t = data as Tracklist;
       setItem(t);
       setTitle(t.title);
-      setDescription(t.description ?? "");
       setMixFinish(t.finishing_note ?? "");
 
       const { data: songData, error: songError } = await supabase
@@ -485,7 +485,7 @@ export default function TracklistDetailPage() {
     const result = await updateTracklistMetadataAction({
       tracklistId: String(id),
       title,
-      description,
+      description: null,
       finishing_note: mixFinish,
     });
 
@@ -512,22 +512,19 @@ export default function TracklistDetailPage() {
         draftStatusError,
       );
       setPageError(
-        "Your title and description were saved, but the draft could not be refreshed in the In Progress list.",
+        "Your draft was saved, but it could not be refreshed in the In Progress list.",
       );
       return;
     }
 
     const trimmed = title.trim();
-    const nextDescription = description.trim() || null;
     const nextFinishingNote = mixFinish.trim() || null;
     setItem({
       ...item,
       title: trimmed,
-      description: nextDescription,
       finishing_note: nextFinishingNote,
     });
     setTitle(trimmed);
-    setDescription(nextDescription ?? "");
     setMixFinish(nextFinishingNote ?? "");
     setPageInfo("Draft saved to In Progress.");
     window.setTimeout(() => setPageInfo(null), 1400);
@@ -582,6 +579,34 @@ export default function TracklistDetailPage() {
     });
 
     await loadSongs();
+  };
+
+  const addUploadedMedia = async (media: UploadedMediaRecord) => {
+    setPageError(null);
+    setPageInfo(null);
+
+    const result = await addSongToTracklistAction({
+      tracklistId: String(id),
+      ...media,
+    });
+
+    if (!result.ok) {
+      const message = getActionError(result);
+      setPageError(message);
+      return { ok: false as const, message };
+    }
+
+    trackEvent("added_song", {
+      tracklist_id: String(id),
+      platform: "upload",
+      source: "file_upload",
+    });
+
+    await loadSongs();
+    setPageInfo("Recording added.");
+    window.setTimeout(() => setPageInfo(null), 1400);
+
+    return { ok: true as const };
   };
 
   const addManual = async () => {
@@ -897,7 +922,7 @@ export default function TracklistDetailPage() {
     window.setTimeout(() => setPageInfo(null), 1200);
   };
 
-  const createMixlist = async () => {
+  const publishMixlist = async () => {
     if (songs.length === 0) {
       alert("Add at least one song first.");
       return;
@@ -914,9 +939,9 @@ export default function TracklistDetailPage() {
     const result = await createMixlistFromTracklistAction({
       source_tracklist_id: String(id),
       title: mixTitle,
-      // Keep using the existing Mixlist `message` column internally,
-      // but its user-facing source is now the Tracklist description.
-      message: description,
+      // Descriptions were removed from Studio. Song notes and the
+      // finishing note now carry the Mixlist's written context.
+      message: "",
       finishing_note: mixFinish,
       recipient_name: mixRecipient,
       sender_name: mixSender,
@@ -950,6 +975,25 @@ export default function TracklistDetailPage() {
       return;
     }
 
+    if (mixDiscoverable) {
+      const discoveryResult = await submitDiscoveryCandidateAction({
+        mixlistId: String(result.mixlistId),
+      });
+
+      if (!discoveryResult.ok) {
+        // Publishing succeeded, so do not make the user retry and accidentally
+        // create a duplicate Mixlist. Surface the Discovery submission issue
+        // separately and continue to the published Mixlist.
+        console.error(
+          "Mixlist published, but Discovery submission failed",
+          discoveryResult,
+        );
+        alert(
+          "Your Mixlist was published, but we couldn't submit it to Discovery. You can keep using the Mixlist normally and try the Discovery submission again later.",
+        );
+      }
+    }
+
     const { error: statusError } = await supabase
       .from("tracklists")
       .update({ status: "published" })
@@ -966,6 +1010,7 @@ export default function TracklistDetailPage() {
       show_sender: showSender,
       show_date: showDate,
       allow_copy_to_studio: allowCopyToStudio,
+      discoverable: mixDiscoverable,
     };
 
     // Keep the original event for existing dashboards, and add the clearer
@@ -984,6 +1029,15 @@ export default function TracklistDetailPage() {
     }
 
     router.push(`/mixlists/${result.mixlistId}`);
+  };
+
+  const requestPublish = () => {
+    if (mixDiscoverable) {
+      setShowDiscoveryConfirm(true);
+      return;
+    }
+
+    void publishMixlist();
   };
 
   if (loading) {
@@ -1008,7 +1062,7 @@ export default function TracklistDetailPage() {
             <InlineNotice
               kind="info"
               title="No songs yet"
-              message="Add songs from Spotify/YouTube/Apple to start shaping the tracklist."
+              message="Add songs from Spotify, YouTube, or Apple Music - or upload your own audio/video recording."
             />
           </div>
         )}
@@ -1035,20 +1089,6 @@ export default function TracklistDetailPage() {
 
           {pageInfo && <InlineNotice kind="info" message={pageInfo} />}
 
-          <div>
-            <label className="block text-xs tracking-widest text-gv-accent">
-              DESCRIPTION
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={DESCRIPTION_LIMIT}
-              className="mt-2 w-full rounded-xl border gv-row border-white/10 bg-white/5 px-4 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
-              rows={5}
-            />
-
-            <CharacterCounter value={description} max={DESCRIPTION_LIMIT} />
-          </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -1151,9 +1191,12 @@ export default function TracklistDetailPage() {
         ) : null}
 
         <div className="mx-auto mt-4 max-w-4xl">
-          <div className={busy ? "opacity-50 pointer-events-none" : ""}>
-            <UnifiedSearch onAdd={addSong} />
-          </div>
+          <UnifiedSearch
+            onAdd={addSong}
+            disabled={busy}
+            uploadTracklistId={String(id)}
+            onRegisterUpload={addUploadedMedia}
+          />
         </div>
 
         {DEV_MANUAL_ADD && (
@@ -1316,8 +1359,18 @@ export default function TracklistDetailPage() {
                         </div>
                       ) : null}
 
+                      {s.platform === "upload" ? (
+                        <span className="flex-shrink-0 rounded-full border border-[#58A6A1]/35 bg-[#58A6A1]/10 px-2 py-1 text-[9px] font-semibold tracking-[0.12em] text-[#2D7774] dark:text-[#86CBC7]">
+                          FILE
+                        </span>
+                      ) : null}
+
                       <a
-                        href={s.url}
+                        href={
+                          s.platform === "upload" && s.track_id
+                            ? `/api/media/stream?path=${encodeURIComponent(s.track_id)}`
+                            : s.url
+                        }
                         target="_blank"
                         rel="noreferrer"
                         className="min-w-0 flex-1 transition hover:text-gv-vat dark:hover:text-gv-cream"
@@ -1514,10 +1567,42 @@ export default function TracklistDetailPage() {
               <input
                 type="checkbox"
                 checked={mixIsPublic}
-                onChange={(e) => setMixIsPublic(e.target.checked)}
+                onChange={(e) => {
+                  const nextPublic = e.target.checked;
+                  setMixIsPublic(nextPublic);
+
+                  // Discovery is a public catalog. Turning Public off also
+                  // withdraws the current publish from Discovery consideration.
+                  if (!nextPublic) {
+                    setMixDiscoverable(false);
+                  }
+                }}
                 className="h-4 w-4 accent-gv-indigo"
               />
               PUBLIC (ACCESS BY LINK)
+            </label>
+
+            <label className="mt-3 flex items-start gap-2 text-xs tracking-widest text-gray-400">
+              <input
+                type="checkbox"
+                checked={mixDiscoverable}
+                onChange={(e) => {
+                  const nextDiscoverable = e.target.checked;
+                  setMixDiscoverable(nextDiscoverable);
+
+                  // A Discoverable Mixlist must be publicly accessible.
+                  if (nextDiscoverable) {
+                    setMixIsPublic(true);
+                  }
+                }}
+                className="mt-0.5 h-4 w-4 accent-gv-turquoise"
+              />
+              <span>
+                <span className="block text-gv-turquoise">DISCOVERABLE</span>
+                <span className="mt-1 block normal-case tracking-normal text-gray-500">
+                  Submit this public Mixlist for consideration on the Discovery page.
+                </span>
+              </span>
             </label>
 
             <label className="mt-3 flex items-center gap-2 text-xs tracking-widest text-gray-400">
@@ -1531,7 +1616,7 @@ export default function TracklistDetailPage() {
             </label>
 
             <button
-              onClick={createMixlist}
+              onClick={requestPublish}
               disabled={creatingMix}
               className="mt-5 rounded-full border border-gv-indigo/40 bg-gv-indigo/10 px-6 py-3 text-xs tracking-widest text-gv-accent hover:bg-gv-indigo/20 transition disabled:opacity-50"
             >
@@ -1540,6 +1625,62 @@ export default function TracklistDetailPage() {
           </div>
         </div>
       </div>
+
+      {showDiscoveryConfirm ? (
+        <div
+          className="fixed inset-0 z-[2147483645] grid place-items-center bg-black/55 px-5 py-8 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="discovery-confirm-title"
+        >
+          <div className="w-full max-w-lg rounded-3xl border border-gv-turquoise/45 bg-[#F0E9DA] p-6 text-[#1A1A23] shadow-2xl dark:bg-[#1A1A23] dark:text-gray-100 sm:p-8">
+            <p className="text-xs font-semibold tracking-[0.22em] text-gv-turquoise">
+              DISCOVERY SUBMISSION
+            </p>
+
+            <h2
+              id="discovery-confirm-title"
+              className="mt-3 text-2xl font-semibold tracking-wide text-gv-accent"
+            >
+              Are you sure you want to publish?
+            </h2>
+
+            <p className="mt-4 text-sm leading-7 text-gray-600 dark:text-gray-300">
+              Making a Mixlist discoverable allows us to consider putting it on
+              our Discover page. Please make sure you&apos;re okay with a bunch
+              of strangers seeing the contents of this Mixlist.
+            </p>
+
+            <p className="mt-3 text-xs leading-6 text-gray-500">
+              Discoverable also means Public. Submission does not guarantee that
+              the Mixlist will be featured.
+            </p>
+
+            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowDiscoveryConfirm(false)}
+                disabled={creatingMix}
+                className="rounded-full border border-gv-turquoise/60 bg-transparent px-6 py-3 text-xs font-semibold tracking-widest text-gv-turquoise transition hover:bg-gv-turquoise/10 disabled:opacity-50"
+              >
+                GO BACK
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDiscoveryConfirm(false);
+                  void publishMixlist();
+                }}
+                disabled={creatingMix}
+                className="rounded-full border border-gv-indigo bg-gv-indigo px-6 py-3 text-xs font-semibold tracking-widest text-gv-cream transition hover:bg-gv-lowcountry disabled:opacity-50"
+              >
+                {creatingMix ? "PUBLISHING…" : "PUBLISH & SUBMIT"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

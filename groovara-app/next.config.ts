@@ -13,7 +13,7 @@ const csp = `
     https://i.ytimg.com
     https://i.scdn.co
     https://is1-ssl.mzstatic.com;
-  media-src 'self' blob: https://open.spotify.com https://embed.music.apple.com https://play.itunes.apple.com https://aod-ssl.itunes.apple.com https://universal-activity-service.itunes.apple.com;
+  media-src 'self' blob: ${supabaseOrigin} https://open.spotify.com https://embed.music.apple.com https://play.itunes.apple.com https://aod-ssl.itunes.apple.com https://universal-activity-service.itunes.apple.com;
   font-src 'self' data:;
   style-src 'self' 'unsafe-inline' https:;
   script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;

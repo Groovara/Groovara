@@ -270,6 +270,7 @@ export default function TracklistDetailPage() {
 
   const [mixReveal, setMixReveal] = useState(true);
   const [creatingMix, setCreatingMix] = useState(false);
+  const [mixMessage, setMixMessage] = useState("");
   const [mixFinish, setMixFinish] = useState("");
   const [mixIsPublic, setMixIsPublic] = useState(true);
   const [mixDiscoverable, setMixDiscoverable] = useState(false);
@@ -941,7 +942,7 @@ export default function TracklistDetailPage() {
       title: mixTitle,
       // Descriptions were removed from Studio. Song notes and the
       // finishing note now carry the Mixlist's written context.
-      message: "",
+      message: mixMessage,
       finishing_note: mixFinish,
       recipient_name: mixRecipient,
       sender_name: mixSender,
@@ -1473,6 +1474,21 @@ export default function TracklistDetailPage() {
               CREATE MIXLIST
             </p>
 
+
+            <div className="mt-4">
+              <label className="block text-xs tracking-widest text-gray-400">
+                OPENING NOTE
+              </label>
+              <textarea
+                value={mixMessage}
+                onChange={(e) => setMixMessage(e.target.value)}
+                maxLength={1000}
+                rows={4}
+                className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#1A1A23] outline-none focus:border-gv-indigo/40 dark:text-gray-100"
+                placeholder="A note they’ll see before the first song..."
+              />
+              <CharacterCounter value={mixMessage} max={1000} />
+            </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>

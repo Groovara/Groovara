@@ -44,7 +44,7 @@ return (
       <PostHogProvider>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AppNav />
-          <div className="pt-14 min-h-screen">
+          <div className="min-h-screen pt-20 sm:pt-28">
             {children}
             <Analytics />
             <SpeedInsights />

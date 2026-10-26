@@ -117,7 +117,7 @@ export default function AppNav() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-[2147483646] isolate">
-      <div className="gv-nav-surface flex h-24 items-center justify-between gap-3 px-3 sm:h-28 sm:px-6 lg:px-8">
+      <div className="gv-nav-surface flex h-20 items-center justify-between gap-2 px-2 sm:h-28 sm:gap-3 sm:px-6 lg:px-8">
         <div aria-hidden="true" className="gv-nav-corner-rings" />
 
         <div ref={wrapRef} className="relative z-10 min-w-0">
@@ -129,7 +129,7 @@ export default function AppNav() {
             aria-expanded={open}
             aria-label={open ? "Close navigation menu" : "Open navigation menu"}
           >
-            <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[24%] transition sm:h-16 sm:w-16">
+            <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-[24%] transition sm:h-16 sm:w-16">
               <Image
                 src="/groovara-logo-light.png"
                 alt="Groovara logo"
@@ -150,16 +150,16 @@ export default function AppNav() {
             </span>
 
             <span className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-              <span className="gv-brand-mark truncate text-[17px] font-semibold tracking-[0.24em] text-[#1F2860] sm:text-[24px] sm:tracking-[0.30em] lg:text-[27px] dark:text-[#B4B8C0]">
+              <span className="gv-brand-mark truncate text-[15px] font-semibold tracking-[0.20em] text-[#1F2860] sm:text-[24px] sm:tracking-[0.30em] lg:text-[27px] dark:text-[#B4B8C0]">
                 GROOVARA
               </span>
 
               {APP_VERSION ? (
-                <span className="shrink-0 rounded-full border border-[#58A6A1] bg-transparent px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#2D7774] transition group-hover:bg-[#58A6A1]/10 sm:px-3 sm:py-1.5 sm:text-[10px] dark:text-[#86CBC7]">
+                <span className="hidden shrink-0 rounded-full border border-[#58A6A1] bg-transparent px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#2D7774] transition group-hover:bg-[#58A6A1]/10 sm:inline-flex dark:text-[#86CBC7]">
                   {APP_VERSION}
                 </span>
               ) : (
-                <span className="shrink-0 rounded-full border border-[#58A6A1] bg-transparent px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#2D7774] transition group-hover:bg-[#58A6A1]/10 sm:px-3 sm:py-1.5 sm:text-[10px] dark:text-[#86CBC7]">
+                <span className="hidden shrink-0 rounded-full border border-[#58A6A1] bg-transparent px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#2D7774] transition group-hover:bg-[#58A6A1]/10 sm:inline-flex dark:text-[#86CBC7]">
                   
                 </span>
               )}
@@ -192,7 +192,7 @@ export default function AppNav() {
           {open ? (
             <div
               role="menu"
-              className="fixed left-0 top-24 z-[2147483647] max-h-[calc(100dvh-6rem)] w-[min(19rem,calc(100vw-0.75rem))] overflow-y-auto rounded-br-3xl border border-[#B4B8C0] bg-[#F0E9DA]/98 p-3 text-[#1A1A23] shadow-[0_18px_42px_rgba(64,47,31,0.22)] backdrop-blur-xl sm:top-28 sm:max-h-[calc(100dvh-7rem)] dark:border-white/10 dark:bg-[#1A1A23]/95 dark:text-white dark:shadow-[0_18px_42px_rgba(0,0,0,0.45)]"
+              className="fixed left-0 top-20 z-[2147483647] max-h-[calc(100dvh-5rem)] w-[min(19rem,calc(100vw-0.75rem))] overflow-y-auto rounded-br-3xl border border-[#B4B8C0] bg-[#F0E9DA]/98 p-3 text-[#1A1A23] shadow-[0_18px_42px_rgba(64,47,31,0.22)] backdrop-blur-xl sm:top-28 sm:max-h-[calc(100dvh-7rem)] dark:border-white/10 dark:bg-[#1A1A23]/95 dark:text-white dark:shadow-[0_18px_42px_rgba(0,0,0,0.45)]"
             >
               <div className="pointer-events-none absolute -right-10 -top-14 h-36 w-36 rounded-full border-[11px] border-[#2A3170]/[0.08] dark:border-[#B4B8C0]/[0.07]" />
               <div className="pointer-events-none absolute -left-14 bottom-2 h-28 w-28 rounded-full border-[9px] border-[#2A3170]/[0.055] dark:border-[#B4B8C0]/[0.045]" />
@@ -278,7 +278,7 @@ export default function AppNav() {
           <Link
             href="/discover"
             aria-current={isActive("/discover") ? "page" : undefined}
-            className={`inline-flex h-10 items-center justify-center rounded-xl border px-2.5 text-[9px] font-semibold tracking-[0.11em] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/45 sm:h-11 sm:px-4 sm:text-[11px] sm:tracking-[0.14em] ${
+            className={`hidden h-10 items-center justify-center rounded-xl border px-2.5 text-[9px] sm:inline-flex font-semibold tracking-[0.11em] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/45 sm:h-11 sm:px-4 sm:text-[11px] sm:tracking-[0.14em] ${
               isActive("/discover")
                 ? "border-[#58A6A1] bg-[#58A6A1]/14 text-[#2D7774] dark:text-[#86CBC7]"
                 : "border-[#58A6A1]/70 bg-transparent text-[#2D7774] hover:-translate-y-0.5 hover:bg-[#58A6A1]/10 dark:text-[#86CBC7]"
@@ -291,7 +291,7 @@ export default function AppNav() {
           <Link
             href="/hub"
             aria-current={isActive("/hub") ? "page" : undefined}
-            className={`inline-flex h-10 items-center justify-center rounded-xl border px-2.5 text-[9px] font-semibold tracking-[0.11em] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/45 sm:h-11 sm:px-4 sm:text-[11px] sm:tracking-[0.14em] ${
+            className={`hidden h-10 items-center justify-center rounded-xl border px-2.5 text-[9px] sm:inline-flex font-semibold tracking-[0.11em] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58A6A1]/45 sm:h-11 sm:px-4 sm:text-[11px] sm:tracking-[0.14em] ${
               isActive("/hub")
                 ? "border-[#58A6A1] bg-[#58A6A1]/14 text-[#2D7774] dark:text-[#86CBC7]"
                 : "border-[#58A6A1]/70 bg-transparent text-[#2D7774] hover:-translate-y-0.5 hover:bg-[#58A6A1]/10 dark:text-[#86CBC7]"

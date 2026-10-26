@@ -558,6 +558,24 @@ export default function EmbeddedPlayer({
 }: EmbeddedPlayerProps) {
   let player: ReactNode = null;
 
+  const isGroovaraMedia = !!url && url.startsWith("/api/media/stream?path=");
+
+  if (platform === "other" && isGroovaraMedia && url) {
+    player = (
+      <div className="rounded-2xl border border-[#58A6A1]/30 bg-muted/80 p-3">
+        <audio
+          src={url}
+          controls
+          preload="metadata"
+          autoPlay={autoplay}
+          className="w-full"
+        >
+          Your browser does not support audio playback.
+        </audio>
+      </div>
+    );
+  }
+
   if (platform === "spotify") {
     const spotifyTrackId = isValidSpotifyTrackId(trackId)
       ? trackId

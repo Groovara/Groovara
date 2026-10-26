@@ -79,7 +79,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div className="mt-9 rounded-[1.75rem] border border-[#E8DDC3]/70 bg-[#C8BCA2] px-6 py-7 text-center shadow-sm sm:px-10 sm:py-8 dark:border-[#C8BCA2]/20 dark:bg-[#3A372F]">
+            <div className="mt-9 rounded-[1.75rem] border border-[#58A6A1] bg-[#B4B8C0]/70 px-6 py-7 text-center shadow-sm sm:px-10 sm:py-8 dark:border-[#58A6A1]/70 dark:bg-[#B4B8C0]/15">
               <p className="text-xl font-semibold leading-8 text-[#292923] sm:text-3xl sm:leading-9 dark:text-[#F4EDDD]">
                 We work alongside the streaming platforms you already use,
                 <br />

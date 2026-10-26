@@ -44,6 +44,8 @@ type MixSong = {
   isrc: string | null;
   url: string;
   note: string | null;
+  platform: string | null;
+  track_id: string | null;
 };
 
 type MixlistProgressRow = {
@@ -237,14 +239,18 @@ function toUiTrack(song: MixSong, index: number): UiTrack {
     song.artist,
   );
 
+  const isUpload = song.platform === "upload" && !!song.track_id;
+
   return {
     id: song.id,
     title: song.title,
     artist: song.artist,
     album: song.album,
     image: null,
-    url: song.url ?? null,
-    platform: getPlatform(song.url ?? ""),
+    url: isUpload
+      ? `/api/media/stream?path=${encodeURIComponent(song.track_id!)}`
+      : song.url ?? null,
+    platform: isUpload ? "other" : getPlatform(song.url ?? ""),
     durationMs: 1,
     notes: song.note,
     theme,
@@ -1209,6 +1215,12 @@ export default function MixlistPage() {
         return;
       }
 
+      if (activeSong.platform === "upload") {
+        setConvertedActiveTrack(null);
+        setConvertingTrack(false);
+        return;
+      }
+
       const sourcePlatform = getPlatform(activeSong.url ?? "");
       if (
         sourcePlatform !== "spotify" &&
@@ -1913,7 +1925,15 @@ export default function MixlistPage() {
                         ? "Reveal this song to play it."
                         : null
                     }
-                    toolbarRight={playerPlatformSelector}
+                    toolbarRight={
+                      activeSong?.platform === "upload"
+                        ? (
+                            <span className="rounded-full border border-[#58A6A1]/40 bg-[#58A6A1]/10 px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] text-[#2D7774] dark:text-[#86CBC7]">
+                              GROOVARA UPLOAD
+                            </span>
+                          )
+                        : playerPlatformSelector
+                    }
                   />
                 </TrackTransition>
               </div>

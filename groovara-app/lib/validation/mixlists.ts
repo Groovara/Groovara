@@ -76,6 +76,8 @@ const ALLOWED_HOSTS = new Set([
   "youtube.com",
   "youtu.be",
   "music.apple.com",
+  "podcasts.apple.com",
+  "itunes.apple.com",
 ]);
 
 export const externalUrlSchema = z
@@ -90,11 +92,12 @@ export const externalUrlSchema = z
     } catch {
       return false;
     }
-  }, "URL must be a valid HTTPS Spotify, YouTube, or Apple Music link");
+  }, "URL must be a valid HTTPS Spotify, YouTube, Apple Music, or Apple Podcasts link");
 
 export const mixlistSongSchema = z.object({
   position: z.number().int().min(1),
   platform: z.string().trim().min(1, "Platform is required"),
+  media_type: z.enum(["song", "podcast_episode"]).default("song"),
   track_id: z.string().trim().min(1, "Track ID is required"),
   title: requiredText("Song title", MAX.songTitle),
   artist: requiredText("Artist", MAX.artist),

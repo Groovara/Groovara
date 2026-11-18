@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import InlineNotice from "../../../lib/InlineNotice";
 import { supabase } from "../../../lib/supabaseClient";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { convertTrackPlatform } from "@/lib/platformConversion";
+import type { MediaType } from "@/lib/mediaTypes";
 import { ensureAppleMusicAuthorized } from "@/lib/appleMusicClient";
 import { copyMixlistToStudioAction } from "./actions";
 import {
@@ -45,6 +46,7 @@ type MixSong = {
   url: string;
   note: string | null;
   platform: string | null;
+  media_type: MediaType;
   track_id: string | null;
 };
 
@@ -104,9 +106,30 @@ function getPlatform(url: string): UiTrack["platform"] {
   if (value.includes("youtube.com") || value.includes("youtu.be"))
     return "youtube";
   if (value.includes("spotify.com")) return "spotify";
-  if (value.includes("music.apple.com") || value.includes("itunes.apple.com"))
+  if (
+    value.includes("music.apple.com") ||
+    value.includes("podcasts.apple.com") ||
+    value.includes("itunes.apple.com")
+  )
     return "apple";
   return "other";
+}
+
+function getCreatorPlatformForSong(song: MixSong): Platform | null {
+  if (
+    song.platform === "spotify" ||
+    song.platform === "youtube" ||
+    song.platform === "apple"
+  ) {
+    return song.platform;
+  }
+
+  const inferred = getPlatform(song.url ?? "");
+  return inferred === "spotify" ||
+    inferred === "youtube" ||
+    inferred === "apple"
+    ? inferred
+    : null;
 }
 
 function extractYouTubeId(rawUrl: string | null | undefined): string | null {
@@ -247,10 +270,12 @@ function toUiTrack(song: MixSong, index: number): UiTrack {
     artist: song.artist,
     album: song.album,
     image: null,
+    trackId: song.track_id,
     url: isUpload
       ? `/api/media/stream?path=${encodeURIComponent(song.track_id!)}`
       : song.url ?? null,
     platform: isUpload ? "other" : getPlatform(song.url ?? ""),
+    mediaType: song.media_type ?? "song",
     durationMs: 1,
     notes: song.note,
     theme,
@@ -341,6 +366,14 @@ function openExternalExportUrl(url: string) {
 export default function MixlistPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedPlatformParam = searchParams.get("platform");
+  const requestedPlatform =
+    requestedPlatformParam === "spotify" ||
+    requestedPlatformParam === "youtube" ||
+    requestedPlatformParam === "apple"
+      ? requestedPlatformParam
+      : null;
   const id = params.id;
   const mixlistId = String(id);
   const isPublicBetaShowcase =
@@ -387,6 +420,7 @@ export default function MixlistPage() {
     title: string;
     artist: string;
     platform: Platform;
+    media_type: MediaType;
     track_id: string;
     url?: string;
   };
@@ -804,7 +838,7 @@ export default function MixlistPage() {
   useEffect(() => {
     receiptTrackedRef.current = false;
     openedMixlistTrackedRef.current = false;
-  }, [mixlistId]);
+  }, [mixlistId, requestedPlatform]);
 
   // Optional user identity for per-user progress.
   // If anonymous, page should still render; progress just won’t persist.
@@ -988,7 +1022,7 @@ export default function MixlistPage() {
 
       const { data: songData, error: songErr } = await songQueryClient
         .from("mixlist_songs")
-        .select("id,position,title,artist,album,url,note,platform,track_id,isrc")
+        .select("id,position,title,artist,album,url,note,platform,media_type,track_id,isrc")
         .eq("mixlist_id", mixlistId)
         .order("position", { ascending: true });
 
@@ -1002,6 +1036,16 @@ export default function MixlistPage() {
 
       const list = (songData ?? []) as MixSong[];
       setSongs(list);
+
+      const creatorDefaultPlatform = list
+        .map((song) => getCreatorPlatformForSong(song))
+        .find((platform): platform is Platform => platform !== null);
+
+      if (requestedPlatform) {
+        setPreferredPlatform(requestedPlatform);
+      } else if (creatorDefaultPlatform) {
+        setPreferredPlatform(creatorDefaultPlatform);
+      }
 
       setRevealedSlots(1);
       setClicked(new Array(list.length).fill(false));
@@ -1023,24 +1067,6 @@ export default function MixlistPage() {
       cancelled = true;
     };
   }, [mixlistId]);
-
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem("groovara_preferred_platform");
-      if (saved === "spotify" || saved === "youtube" || saved === "apple") {
-        setPreferredPlatform(saved);
-      }
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        "groovara_preferred_platform",
-        preferredPlatform,
-      );
-    } catch {}
-  }, [preferredPlatform]);
 
   // Hydrate persisted progress if logged in
   useEffect(() => {
@@ -1199,6 +1225,7 @@ export default function MixlistPage() {
       image: null,
       url: null,
       platform: "other",
+      mediaType: "song",
       durationMs: 1,
       notes: null,
       theme: createTheme(`mix-${mixlistId}`, "Mixlist", "Groovara"),
@@ -1237,7 +1264,8 @@ export default function MixlistPage() {
           title: activeSong.title,
           artist: activeSong.artist,
           platform: sourcePlatform,
-          track_id: activeSong.id,
+          media_type: activeSong.media_type ?? "song",
+          track_id: activeSong.track_id ?? activeSong.id,
           url: activeSong.url,
         });
         setConvertingTrack(false);
@@ -1252,7 +1280,8 @@ export default function MixlistPage() {
             title: activeSong.title,
             artist: activeSong.artist,
             platform: sourcePlatform,
-            track_id: activeSong.id,
+            media_type: activeSong.media_type ?? "song",
+            track_id: activeSong.track_id ?? activeSong.id,
             url: activeSong.url,
             isrc: activeSong.isrc,
           },
@@ -1266,14 +1295,19 @@ export default function MixlistPage() {
                   title: converted.title ?? activeSong.title,
                   artist: converted.artist ?? activeSong.artist,
                   platform: converted.platform ?? sourcePlatform,
-                  track_id: converted.track_id ?? activeSong.id,
+                  media_type: activeSong.media_type ?? "song",
+                  track_id:
+                    converted.track_id ??
+                    activeSong.track_id ??
+                    activeSong.id,
                   url: converted.url ?? activeSong.url,
                 }
               : {
                   title: activeSong.title,
                   artist: activeSong.artist,
                   platform: sourcePlatform,
-                  track_id: activeSong.id,
+                  media_type: activeSong.media_type ?? "song",
+                  track_id: activeSong.track_id ?? activeSong.id,
                   url: activeSong.url,
                 },
           );
@@ -1286,7 +1320,8 @@ export default function MixlistPage() {
             title: activeSong.title,
             artist: activeSong.artist,
             platform: sourcePlatform,
-            track_id: activeSong.id,
+            media_type: activeSong.media_type ?? "song",
+            track_id: activeSong.track_id ?? activeSong.id,
             url: activeSong.url,
           });
         }
@@ -1361,12 +1396,24 @@ export default function MixlistPage() {
   };
 
 
+  const selectSongWithCreatorPlatform = (index: number) => {
+    const nextSong = songs[index];
+
+    if (nextSong) {
+      const creatorPlatform = getCreatorPlatformForSong(nextSong);
+      if (creatorPlatform) setPreferredPlatform(creatorPlatform);
+    }
+
+    setConvertedActiveTrack(null);
+    setSelectedIndex(index);
+  };
+
   const handleRevealNext = () => {
     const nextSlots = Math.min(revealedSlots + 1, songs.length);
     const nextIndex = Math.max(0, nextSlots - 1);
 
     setRevealedSlots(nextSlots);
-    setSelectedIndex(nextIndex);
+    selectSongWithCreatorPlatform(nextIndex);
     revealSongAt(nextIndex, "reveal_next");
   };
 
@@ -1377,7 +1424,7 @@ export default function MixlistPage() {
 
     if (clicked[0] !== true) {
       setRevealedSlots((current) => Math.max(1, current));
-      setSelectedIndex(0);
+      selectSongWithCreatorPlatform(0);
       revealSongAt(0, "reveal_first");
       return;
     }
@@ -1387,7 +1434,9 @@ export default function MixlistPage() {
 
   const handlePreviousSong = () => {
     activateMediaFromUserGesture();
-    setSelectedIndex(Math.max(0, safeSelectedIndex - 1));
+    selectSongWithCreatorPlatform(
+      Math.max(0, safeSelectedIndex - 1),
+    );
   };
 
   const handleNextSong = () => {
@@ -1407,13 +1456,13 @@ export default function MixlistPage() {
       revealSongAt(nextIndex, "player_reveal_next");
     }
 
-    setSelectedIndex(nextIndex);
+    selectSongWithCreatorPlatform(nextIndex);
   };
 
   const handleListenAgain = () => {
     if (songs.length === 0) return;
 
-    setSelectedIndex(0);
+    selectSongWithCreatorPlatform(0);
     setHasInteracted(false);
 
     if (mix?.reveal_mode) {
@@ -1542,11 +1591,16 @@ export default function MixlistPage() {
           <option value="spotify" className="bg-card text-foreground dark:bg-black dark:text-white">
             Spotify
           </option>
-          <option value="youtube" className="bg-card text-foreground dark:bg-black dark:text-white">
+          <option
+            value="youtube"
+            className="bg-card text-foreground dark:bg-black dark:text-white"
+          >
             YouTube
           </option>
           <option value="apple" className="bg-card text-foreground dark:bg-black dark:text-white">
-            Apple Music
+            {activeSong?.media_type === "podcast_episode"
+              ? "Apple Podcasts"
+              : "Apple Music"}
           </option>
         </select>
       </div>
@@ -1998,7 +2052,7 @@ export default function MixlistPage() {
                   type="button"
                   onClick={() => {
                     activateMediaFromUserGesture();
-                    setSelectedIndex(index);
+                    selectSongWithCreatorPlatform(index);
                     revealSongAt(index, "song_list");
                   }}
                   className="gv-row block w-full rounded-2xl px-4 py-4 text-left transition"
@@ -2020,7 +2074,7 @@ export default function MixlistPage() {
                 tabIndex={0}
                 onClick={() => {
                   activateMediaFromUserGesture();
-                  setSelectedIndex(index);
+                  selectSongWithCreatorPlatform(index);
                 }}
                 onKeyDown={(event) => {
                   if (
@@ -2029,7 +2083,7 @@ export default function MixlistPage() {
                   ) {
                     event.preventDefault();
                     activateMediaFromUserGesture();
-                    setSelectedIndex(index);
+                    selectSongWithCreatorPlatform(index);
                   }
                 }}
                 className={`gv-row rounded-2xl border px-4 py-3 transition ${

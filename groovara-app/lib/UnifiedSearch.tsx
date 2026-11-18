@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import LocalMediaUpload, {
   type UploadedMediaRecord,
 } from "@/lib/LocalMediaUpload";
+import type { MediaType } from "@/lib/mediaTypes";
 
 type SearchPlatform = "spotify" | "apple" | "youtube";
 type PlatformKey = SearchPlatform | "upload";
@@ -17,6 +18,7 @@ export type UnifiedSearchResult = {
   url: string;
   image: string | null;
   isrc?: string | null;
+  media_type: MediaType;
 };
 
 type RegisterResult =
@@ -46,6 +48,7 @@ type SearchApiTrack = {
   image?: string | null;
   thumbnail_url?: string | null;
   isrc?: string | null;
+  media_type?: MediaType;
 };
 
 type SearchApiResponse = {
@@ -88,6 +91,10 @@ function normalizeTrack(
     url,
     image: raw.image ?? raw.thumbnail_url ?? null,
     isrc: raw.isrc ?? null,
+    media_type:
+      raw.media_type === "podcast_episode"
+        ? "podcast_episode"
+        : "song",
   };
 }
 
@@ -286,12 +293,21 @@ export default function UnifiedSearch({
                     )}
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {result.title}
-                      </p>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {result.title}
+                        </p>
+                        <span className="flex-shrink-0 rounded-full border border-border px-2 py-0.5 text-[9px] font-semibold tracking-[0.12em] text-muted-foreground">
+                          {result.media_type === "podcast_episode"
+                            ? "PODCAST"
+                            : "SONG"}
+                        </span>
+                      </div>
                       <p className="truncate text-xs text-muted-foreground">
                         {result.artist}
-                        {result.album ? ` • ${result.album}` : ""}
+                        {result.album && result.album !== result.artist
+                          ? ` • ${result.album}`
+                          : ""}
                       </p>
                     </div>
 

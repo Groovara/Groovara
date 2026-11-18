@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isMediaType, type MediaType } from "@/lib/mediaTypes";
 import {
   cacheGlobalMatchForSourceUrl,
   findGlobalYouTubeMatch,
@@ -10,6 +11,7 @@ type Platform = "spotify" | "youtube" | "apple";
 
 type ConvertRequestBody = {
   sourcePlatform: Platform;
+  sourceMediaType?: MediaType;
   sourceUrl: string;
   sourceTitle: string;
   sourceArtist: string;
@@ -26,6 +28,7 @@ type SearchTrack = {
   album?: string;
   url?: string;
   image?: string | null;
+  media_type?: MediaType;
 };
 
 type CachedConversionRow = {
@@ -64,6 +67,19 @@ type CachedYouTubeRefreshResult =
       kind: "error";
       message: string;
     };
+
+
+type AuthoritativeEpisodeLink = {
+  episode_id: string;
+  platform: Platform;
+  url: string;
+  external_id: string;
+};
+
+type AuthoritativeEpisodeConversion =
+  | { kind: "none" }
+  | { kind: "missing_target" }
+  | { kind: "found"; target: AuthoritativeEpisodeLink };
 
 function isPlatform(value: unknown): value is Platform {
   return value === "spotify" || value === "youtube" || value === "apple";
@@ -144,6 +160,96 @@ function extractYouTubeId(
   }
 }
 
+function extractPodcastEpisodeExternalId(
+  platform: Platform,
+  rawUrl: string | null | undefined,
+): string | null {
+  if (!rawUrl) return null;
+
+  try {
+    const parsed = new URL(rawUrl.trim());
+    const host = parsed.hostname.toLowerCase();
+    const parts = parsed.pathname.split("/").filter(Boolean);
+
+    if (platform === "spotify") {
+      if (host !== "open.spotify.com") return null;
+      const episodeIndex = parts.indexOf("episode");
+      const id = episodeIndex >= 0 ? parts[episodeIndex + 1] : null;
+      return id && /^[A-Za-z0-9]+$/.test(id) ? id : null;
+    }
+
+    if (platform === "apple") {
+      const isApplePodcasts =
+        host === "podcasts.apple.com" || host.endsWith(".podcasts.apple.com");
+      if (!isApplePodcasts) return null;
+
+      const episodeId = parsed.searchParams.get("i");
+      return episodeId && /^\d+$/.test(episodeId) ? episodeId : null;
+    }
+
+    return extractYouTubeId(rawUrl);
+  } catch {
+    return null;
+  }
+}
+
+async function findAuthoritativeEpisodeConversion(
+  admin: ReturnType<typeof createAdminClient>,
+  sourcePlatform: Platform,
+  sourceUrl: string,
+  targetPlatform: Platform,
+): Promise<AuthoritativeEpisodeConversion> {
+  const sourceExternalId = extractPodcastEpisodeExternalId(
+    sourcePlatform,
+    sourceUrl,
+  );
+
+  if (!sourceExternalId) {
+    return { kind: "none" };
+  }
+
+  const { data: sourceLink, error: sourceError } = await admin
+    .from("partner_episode_platform_links")
+    .select("episode_id,platform,url,external_id")
+    .eq("platform", sourcePlatform)
+    .eq("external_id", sourceExternalId)
+    .maybeSingle();
+
+  if (sourceError) {
+    // Keep ordinary Groovara conversion working if the optional partner table
+    // has not been migrated yet. Other database failures are still logged.
+    if (sourceError.code !== "42P01") {
+      console.error("Authoritative episode source lookup failed", sourceError);
+    }
+    return { kind: "none" };
+  }
+
+  if (!sourceLink) {
+    return { kind: "none" };
+  }
+
+  const { data: targetLink, error: targetError } = await admin
+    .from("partner_episode_platform_links")
+    .select("episode_id,platform,url,external_id")
+    .eq("episode_id", sourceLink.episode_id)
+    .eq("platform", targetPlatform)
+    .maybeSingle();
+
+  if (targetError) {
+    console.error("Authoritative episode target lookup failed", targetError);
+    return { kind: "missing_target" };
+  }
+
+  if (!targetLink) {
+    return { kind: "missing_target" };
+  }
+
+  return {
+    kind: "found",
+    target: targetLink as AuthoritativeEpisodeLink,
+  };
+}
+
 function cleanYouTubeTitle(raw: string) {
   return raw
     .replace(/&quot;/g, '"')
@@ -167,16 +273,21 @@ function conversionInvolvesYouTube(row: {
   return row.source_platform === "youtube" || row.target_platform === "youtube";
 }
 
-function getSearchPath(platform: Platform, query: string) {
+function getSearchPath(
+  platform: Platform,
+  query: string,
+  mediaType: MediaType,
+) {
   const encoded = encodeURIComponent(query);
+  const encodedMediaType = encodeURIComponent(mediaType);
 
   switch (platform) {
     case "spotify":
-      return `/api/spotify/search?q=${encoded}`;
+      return `/api/spotify/search?q=${encoded}&media_type=${encodedMediaType}`;
     case "youtube":
       return `/api/youtube/search?q=${encoded}&usage=automatic`;
     case "apple":
-      return `/api/apple/search?q=${encoded}`;
+      return `/api/apple/search?q=${encoded}&media_type=${encodedMediaType}`;
   }
 }
 
@@ -341,6 +452,9 @@ export async function POST(req: Request) {
     const body = (await req.json()) as Partial<ConvertRequestBody>;
 
     const sourcePlatform = body.sourcePlatform;
+    const sourceMediaType = isMediaType(body.sourceMediaType)
+      ? body.sourceMediaType
+      : "song";
     const sourceUrl = String(body.sourceUrl || "").trim();
     const sourceTitle = String(body.sourceTitle || "").trim();
     const sourceArtist = String(body.sourceArtist || "").trim();
@@ -380,6 +494,51 @@ export async function POST(req: Request) {
     }
 
     const admin = createAdminClient();
+
+    // Partner-managed podcast episodes may define exact Spotify, Apple
+    // Podcasts, and YouTube URLs. These mappings are authoritative and run
+    // before both the normal conversion cache and fuzzy search, so a prior bad
+    // cached match can never override the partner-provided episode mapping.
+    if (sourceMediaType === "podcast_episode") {
+      const authoritative = await findAuthoritativeEpisodeConversion(
+        admin,
+        sourcePlatform,
+        sourceUrl,
+        targetPlatform,
+      );
+
+      if (authoritative.kind === "found") {
+        return NextResponse.json({
+          cached: true,
+          authoritative: true,
+          status: "found",
+          track: {
+            title: sourceTitle,
+            artist: sourceArtist,
+            platform: targetPlatform,
+            media_type: sourceMediaType,
+            track_id: authoritative.target.external_id,
+            url: authoritative.target.url,
+          },
+        });
+      }
+
+      if (authoritative.kind === "missing_target") {
+        return NextResponse.json({
+          cached: false,
+          authoritative: true,
+          status: "authoritative_target_missing",
+          track: {
+            title: sourceTitle,
+            artist: sourceArtist,
+            platform: sourcePlatform,
+            media_type: sourceMediaType,
+            track_id: "",
+            url: sourceUrl,
+          },
+        });
+      }
+    }
 
     // 1. Check persistent cache first.
     const { data: cachedRow, error: cacheError } = await admin
@@ -470,7 +629,7 @@ export async function POST(req: Request) {
     }
   }
 
-  if (targetPlatform === "youtube") {
+  if (targetPlatform === "youtube" && sourceMediaType === "song") {
     const globalMatch = await findGlobalYouTubeMatch({
       admin,
       sourceTitle,
@@ -537,7 +696,11 @@ export async function POST(req: Request) {
     // 2. No usable cache hit, so search the requested target platform.
     const query = `${normalizeSearchText(sourceTitle)} ${normalizeSearchText(
       sourceArtist
-    )}`.trim();
+    )}${
+      sourceMediaType === "podcast_episode" && targetPlatform === "youtube"
+        ? " podcast episode"
+        : ""
+    }`.trim();
 
     if (!query) {
       return NextResponse.json(
@@ -546,7 +709,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const searchUrl = new URL(getSearchPath(targetPlatform, query), req.url);
+    const searchUrl = new URL(
+      getSearchPath(targetPlatform, query, sourceMediaType),
+      req.url,
+    );
 
     const searchResponse = await fetch(searchUrl.toString(), {
       method: "GET",
@@ -662,6 +828,32 @@ export async function POST(req: Request) {
       searchJson?.results?.[0] ??
       searchJson?.items?.[0] ??
       null;
+
+    if (
+      match?.media_type &&
+      match.media_type !== sourceMediaType
+    ) {
+      console.error("Rejected cross-media conversion result", {
+        sourceMediaType,
+        targetPlatform,
+        resultMediaType: match.media_type,
+        sourceTitle,
+        sourceArtist,
+      });
+
+      return NextResponse.json({
+        cached: false,
+        status: "media_type_mismatch",
+        track: {
+          title: sourceTitle,
+          artist: sourceArtist,
+          platform: sourcePlatform,
+          media_type: sourceMediaType,
+          track_id: "",
+          url: sourceUrl,
+        },
+      });
+    }
 
     // 3. If no match, cache not_found and return original.
     if (!match) {

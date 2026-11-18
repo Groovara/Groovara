@@ -76,9 +76,8 @@ export default function TrackView({
           <EmbeddedPlayer
             url={track.url}
             platform={track.platform}
-            trackId={
-              (track as UiTrack & { trackId?: string | null }).trackId ?? null
-            }
+            trackId={track.trackId ?? null}
+            mediaType={track.mediaType}
             isHidden={!isRevealed}
             title={track.title}
             artist={track.artist}

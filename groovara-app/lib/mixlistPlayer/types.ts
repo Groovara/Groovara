@@ -1,3 +1,5 @@
+import type { MediaType } from "@/lib/mediaTypes";
+
 export type UiTrackTheme = {
   backgroundColor: string;
   textColor: string;
@@ -13,9 +15,10 @@ export type UiTrack = {
   artist: string;
   album?: string | null;
   image?: string | null;
-  trackid?: string | null;
+  trackId?: string | null;
   url: string | null;
   platform: "youtube" | "spotify" | "apple" | "other";
+  mediaType: MediaType;
   durationMs: number;
   notes?: string | null;
   theme: UiTrackTheme;

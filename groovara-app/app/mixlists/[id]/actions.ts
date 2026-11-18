@@ -16,12 +16,14 @@ type MixlistSongRow = {
   id: string;
   position: number | null;
   platform: string | null;
+  media_type: "song" | "podcast_episode" | null;
   track_id: string | null;
   title: string;
   artist: string;
   album: string | null;
   url: string;
   note: string | null;
+  isrc: string | null;
 };
 
 function inferPlatform(url: string): string {
@@ -35,11 +37,33 @@ function inferPlatform(url: string): string {
     return "spotify";
   }
 
-  if (value.includes("music.apple.com") || value.includes("itunes.apple.com")) {
+  if (
+    value.includes("music.apple.com") ||
+    value.includes("podcasts.apple.com") ||
+    value.includes("itunes.apple.com")
+  ) {
     return "apple";
   }
 
   return "other";
+}
+
+function inferMediaType(
+  song: Pick<MixlistSongRow, "media_type" | "url">,
+): "song" | "podcast_episode" {
+  if (song.media_type === "podcast_episode") return "podcast_episode";
+
+  const value = song.url.toLowerCase();
+  if (
+    value.includes("podcasts.apple.com") ||
+    value.includes("open.spotify.com/episode/") ||
+    value.startsWith("spotify:episode:") ||
+    (value.includes("itunes.apple.com") && value.includes("podcast"))
+  ) {
+    return "podcast_episode";
+  }
+
+  return "song";
 }
 
 export async function copyMixlistToStudioAction(
@@ -70,7 +94,9 @@ export async function copyMixlistToStudioAction(
 
   const { data: mixlist, error: mixlistError } = await supabase
     .from("mixlists")
-    .select("id,title,message,finishing_note,owner_user_id,allow_copy_to_studio")
+    .select(
+      "id,title,message,finishing_note,recipient_name,sender_name,show_recipient,show_sender,owner_user_id,allow_copy_to_studio",
+    )
     .eq("id", mixlistId)
     .maybeSingle();
 
@@ -99,7 +125,7 @@ export async function copyMixlistToStudioAction(
 
   const { data: songData, error: songError } = await supabase
     .from("mixlist_songs")
-    .select("id,position,platform,track_id,title,artist,album,url,note")
+    .select("id,position,platform,media_type,track_id,title,artist,album,url,note,isrc")
     .eq("mixlist_id", mixlistId)
     .order("position", { ascending: true });
 
@@ -121,6 +147,10 @@ export async function copyMixlistToStudioAction(
       title: studioTitle,
       description: mixlist.message?.trim() || null,
       finishing_note: mixlist.finishing_note?.trim() || null,
+      recipient_name: mixlist.recipient_name?.trim() || null,
+      sender_name: mixlist.sender_name?.trim() || null,
+      show_recipient: !!mixlist.show_recipient,
+      show_sender: !!mixlist.show_sender,
       status: "draft",
       updated_at: now,
     })
@@ -141,6 +171,7 @@ export async function copyMixlistToStudioAction(
       tracklist_id: tracklist.id,
       position: index,
       platform: song.platform?.trim() || inferPlatform(song.url),
+      media_type: inferMediaType(song),
       track_id: song.track_id?.trim() || song.id,
       title: song.title,
       artist: song.artist,
@@ -148,11 +179,13 @@ export async function copyMixlistToStudioAction(
       version: null,
       url: song.url,
       note: song.note,
+      isrc: song.isrc,
     }));
 
-    const { error: insertSongsError } = await supabase
+    const { data: insertedSongs, error: insertSongsError } = await supabase
       .from("tracklist_songs")
-      .insert(payload);
+      .insert(payload)
+      .select("id,position,url,media_type");
 
     if (insertSongsError) {
       await supabase.from("tracklists").delete().eq("id", tracklist.id);
@@ -163,6 +196,38 @@ export async function copyMixlistToStudioAction(
           insertSongsError.message ??
           "The Studio draft was created, but its songs could not be copied.",
       };
+    }
+
+    // Verify the copied rows retained their content class. This repairs any
+    // stale/defaulted row immediately instead of letting Studio treat a
+    // podcast episode as a song after the copy.
+    const insertedByPosition = new Map(
+      (insertedSongs ?? []).map((row) => [row.position, row]),
+    );
+
+    for (const [index, sourceSong] of songs.entries()) {
+      const copiedRow = insertedByPosition.get(index);
+      if (!copiedRow) continue;
+
+      const expectedMediaType = inferMediaType(sourceSong);
+      if (copiedRow.media_type === expectedMediaType) continue;
+
+      const { error: repairError } = await supabase
+        .from("tracklist_songs")
+        .update({ media_type: expectedMediaType })
+        .eq("id", copiedRow.id)
+        .eq("tracklist_id", tracklist.id);
+
+      if (repairError) {
+        await supabase.from("tracklists").delete().eq("id", tracklist.id);
+
+        return {
+          ok: false,
+          message:
+            repairError.message ??
+            "The Studio draft was created, but podcast metadata could not be preserved.",
+        };
+      }
     }
   }
 

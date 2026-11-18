@@ -94,7 +94,7 @@ async function verifySongOwnership(
 ) {
   const { data, error } = await supabase
     .from("tracklist_songs")
-    .select("id,title,position,platform,track_id")
+    .select("id,title,position,platform,track_id,media_type")
     .eq("id", songId)
     .eq("tracklist_id", tracklistId)
     .maybeSingle();
@@ -131,16 +131,43 @@ const updateTracklistMetadataSchema = z.object({
   description: z.preprocess(
     (value) => {
       if (typeof value !== "string") return value;
-      const trimmed = value.trim();
-      return trimmed === "" ? null : trimmed;
+      const normalized = normalizeUserText(value);
+      return normalized.trim() === "" ? null : normalized;
     },
     z.string().max(1000).nullable()
   ),
+  finishing_note: z.preprocess(
+    (value) => {
+      if (typeof value !== "string") return value;
+      const normalized = normalizeUserText(value);
+      return normalized.trim() === "" ? null : normalized;
+    },
+    z.string().max(1000).nullable()
+  ),
+  recipient_name: z.preprocess(
+    (value) => {
+      if (typeof value !== "string") return value;
+      const trimmed = value.trim();
+      return trimmed === "" ? null : trimmed;
+    },
+    z.string().max(120).nullable()
+  ),
+  sender_name: z.preprocess(
+    (value) => {
+      if (typeof value !== "string") return value;
+      const trimmed = value.trim();
+      return trimmed === "" ? null : trimmed;
+    },
+    z.string().max(120).nullable()
+  ),
+  show_recipient: z.boolean(),
+  show_sender: z.boolean(),
 });
 
 const baseTrackSongFields = {
   tracklistId: z.string().uuid("Invalid tracklist id."),
   platform: z.string().trim().min(1).max(50),
+  media_type: z.enum(["song", "podcast_episode"]).default("song"),
   track_id: z.string().trim().min(1).max(200),
   title: z.string().trim().min(1).max(300),
   artist: z.string().trim().min(1).max(200),
@@ -177,6 +204,7 @@ const uploadedTrackSongSchema = z
   .object({
     ...baseTrackSongFields,
     platform: z.literal("upload"),
+    media_type: z.literal("song").optional().default("song"),
     // Uploaded recordings intentionally use Groovara's private-media scheme,
     // not an HTTPS Spotify/YouTube/Apple link.
     url: z.string().trim().min(1, "Uploaded media reference is required.").max(2048),
@@ -216,6 +244,7 @@ const uploadedMixlistSongSchema = z
   .object({
     position: z.number().int().min(0),
     platform: z.literal("upload"),
+    media_type: z.literal("song").optional().default("song"),
     track_id: z.string().trim().min(1).max(200),
     title: z.string().trim().min(1).max(300),
     artist: z.string().trim().min(1).max(200),
@@ -273,6 +302,7 @@ function isUploadSong(value: unknown): value is Record<string, unknown> & {
 type MixlistSongForAction = {
   position: number;
   platform: string;
+  media_type: "song" | "podcast_episode";
   track_id: string;
   title: string;
   artist: string;
@@ -290,6 +320,7 @@ const updateSongPlatformSchema = z.object({
   tracklistId: z.string().uuid("Invalid tracklist id."),
   songId: z.string().uuid("Invalid song id."),
   platform: z.enum(["spotify", "youtube", "apple"]),
+  media_type: z.enum(["song", "podcast_episode"]),
   track_id: z.string().trim().min(1).max(200),
   url: z.string().trim().url("URL must be valid.").max(2048),
 });
@@ -462,6 +493,7 @@ export async function createMixlistFromTracklistAction(
             ? {
                 ...song,
                 platform: "youtube",
+                media_type: "song",
                 track_id: "dQw4w9WgXcQ",
                 url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 isrc: null,
@@ -497,6 +529,7 @@ export async function createMixlistFromTracklistAction(
     songs.push({
       position: song.position,
       platform: song.platform,
+      media_type: song.media_type ?? "song",
       track_id: song.track_id,
       title: song.title,
       artist: song.artist,
@@ -564,6 +597,12 @@ export async function createMixlistFromTracklistAction(
       finishing_note:
         normalizedFinishingNote.trim() === "" ? null : normalizedFinishingNote,
       include_song_notes: input.include_song_notes,
+      recipient_name: input.recipient_name,
+      sender_name: input.sender_name,
+      show_recipient: input.show_recipient,
+      show_sender: input.show_sender,
+      show_date: input.show_date,
+      allow_copy_to_studio: input.allow_copy_to_studio,
     })
     .select("id")
     .single();
@@ -596,6 +635,7 @@ export async function createMixlistFromTracklistAction(
       mixlist_id: mix.id,
       position: i + 1,
       platform: s.platform,
+      media_type: s.media_type,
       track_id: s.track_id,
       title: s.title,
       artist: s.artist,
@@ -629,7 +669,16 @@ export async function updateTracklistMetadataAction(rawInput: unknown): Promise<
     return validationFailure(parsed.error);
   }
 
-  const { tracklistId, title, description } = parsed.data;
+  const {
+    tracklistId,
+    title,
+    description,
+    finishing_note,
+    recipient_name,
+    sender_name,
+    show_recipient,
+    show_sender,
+  } = parsed.data;
   const { supabase, user, error: authError } = await getAuthedUser();
 
   if (authError || !user) {
@@ -646,7 +695,15 @@ export async function updateTracklistMetadataAction(rawInput: unknown): Promise<
 
   const { error } = await supabase
     .from("tracklists")
-    .update({ title, description })
+    .update({
+      title,
+      description,
+      finishing_note,
+      recipient_name,
+      sender_name,
+      show_recipient,
+      show_sender,
+    })
     .eq("id", tracklistId);
 
   if (error) {
@@ -726,6 +783,7 @@ export async function addSongToTracklistAction(
     tracklist_id: input.tracklistId,
     position: nextPos,
     platform: input.platform,
+    media_type: input.media_type,
     track_id: input.track_id,
     title: input.title,
     artist: input.artist,
@@ -757,7 +815,7 @@ export async function updateTracklistSongPlatformAction(
     return validationFailure(parsed.error);
   }
 
-  const { tracklistId, songId, platform, track_id, url } = parsed.data;
+  const { tracklistId, songId, platform, media_type, track_id, url } = parsed.data;
   const { supabase, user, error: authError } = await getAuthedUser();
 
   if (authError || !user) {
@@ -818,10 +876,21 @@ export async function updateTracklistSongPlatformAction(
     };
   }
 
+  if ((song.media_type ?? "song") !== media_type) {
+    return {
+      ok: false,
+      type: "validation",
+      message: "A platform conversion cannot change the media type.",
+      fieldErrors: {},
+      formErrors: ["Podcast episodes can only convert to podcast episodes, and songs can only convert to songs."],
+    };
+  }
+
   const { error } = await supabase
     .from("tracklist_songs")
     .update({
       platform,
+      media_type,
       track_id,
       url,
     })

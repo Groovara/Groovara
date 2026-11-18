@@ -7,11 +7,13 @@ import {
   useState,
 } from "react";
 import { extractYouTubeId } from "./youtube";
+import type { MediaType } from "@/lib/mediaTypes";
 
 type EmbeddedPlayerProps = {
   url: string | null;
   platform?: "youtube" | "spotify" | "apple" | "other";
   trackId?: string | null;
+  mediaType?: MediaType;
   isHidden: boolean;
   title?: string;
   artist?: string;
@@ -24,18 +26,21 @@ const MEDIA_ACTIVATE_EVENT = "groovara:media-activate";
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function isValidSpotifyTrackId(
+function isValidSpotifyEntityId(
   value: string | null | undefined,
 ): value is string {
   return !!value && /^[A-Za-z0-9]{22}$/.test(value);
 }
 
-function extractSpotifyTrackId(rawUrl: string | null): string | null {
+function extractSpotifyEntityId(
+  rawUrl: string | null,
+  entityType: "track" | "episode",
+): string | null {
   if (!rawUrl) return null;
 
-  if (rawUrl.startsWith("spotify:track:")) {
+  if (rawUrl.startsWith(`spotify:${entityType}:`)) {
     const id = rawUrl.split(":")[2] ?? null;
-    return isValidSpotifyTrackId(id) ? id : null;
+    return isValidSpotifyEntityId(id) ? id : null;
   }
 
   try {
@@ -45,23 +50,39 @@ function extractSpotifyTrackId(rawUrl: string | null): string | null {
     if (!host.includes("spotify.com")) return null;
 
     const segments = parsed.pathname.split("/").filter(Boolean);
-    const trackIndex = segments.indexOf("track");
+    const entityIndex = segments.indexOf(entityType);
 
-    if (trackIndex === -1) return null;
+    if (entityIndex === -1) return null;
 
-    const id = segments[trackIndex + 1] ?? null;
-    return isValidSpotifyTrackId(id) ? id : null;
+    const id = segments[entityIndex + 1] ?? null;
+    return isValidSpotifyEntityId(id) ? id : null;
   } catch {
     return null;
   }
 }
 
-function buildAppleEmbedUrl(rawUrl: string | null): string | null {
+function buildAppleEmbedUrl(
+  rawUrl: string | null,
+  mediaType: MediaType,
+): string | null {
   if (!rawUrl) return null;
 
   try {
     const parsed = new URL(rawUrl);
     const host = parsed.hostname.toLowerCase();
+
+    if (mediaType === "podcast_episode") {
+      if (host === "embed.podcasts.apple.com") {
+        return parsed.toString();
+      }
+
+      if (host !== "podcasts.apple.com") {
+        return null;
+      }
+
+      parsed.hostname = "embed.podcasts.apple.com";
+      return parsed.toString();
+    }
 
     if (host === "embed.music.apple.com") {
       return parsed.toString();
@@ -204,20 +225,22 @@ function loadSpotifyIframeApi(): Promise<SpotifyIframeApi> {
 
 function SpotifyPlayer({
   trackId,
+  entityType,
   autoplay,
 }: {
   trackId: string;
+  entityType: "track" | "episode";
   autoplay: boolean;
 }) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const controllerRef = useRef<SpotifyEmbedController | null>(null);
   const loadedUriRef = useRef<string | null>(null);
-  const currentUriRef = useRef(`spotify:track:${trackId}`);
+  const currentUriRef = useRef(`spotify:${entityType}:${trackId}`);
   const autoplayRef = useRef(autoplay);
 
   const [ready, setReady] = useState(false);
 
-  const uri = `spotify:track:${trackId}`;
+  const uri = `spotify:${entityType}:${trackId}`;
 
   useEffect(() => {
     currentUriRef.current = uri;
@@ -551,6 +574,7 @@ export default function EmbeddedPlayer({
   url,
   platform,
   trackId,
+  mediaType = "song",
   isHidden,
   title,
   artist,
@@ -577,14 +601,17 @@ export default function EmbeddedPlayer({
   }
 
   if (platform === "spotify") {
-    const spotifyTrackId = isValidSpotifyTrackId(trackId)
-      ? trackId
-      : extractSpotifyTrackId(url);
+    const entityType =
+      mediaType === "podcast_episode" ? "episode" : "track";
+    const spotifyTrackId =
+      extractSpotifyEntityId(url, entityType) ??
+      (isValidSpotifyEntityId(trackId) ? trackId : null);
 
     if (spotifyTrackId) {
       player = (
         <SpotifyPlayer
           trackId={spotifyTrackId}
+          entityType={entityType}
           autoplay={autoplay}
         />
       );
@@ -592,20 +619,31 @@ export default function EmbeddedPlayer({
   }
 
   if (platform === "apple") {
-    const appleEmbedUrl = buildAppleEmbedUrl(url);
+    const appleEmbedUrl = buildAppleEmbedUrl(url, mediaType);
 
     if (appleEmbedUrl) {
+      const isPodcastEpisode = mediaType === "podcast_episode";
+
       player = (
         <div className="rounded-2xl border border-border bg-muted/80 p-3">
-          <div className="relative h-[152px] w-full overflow-hidden rounded-xl border border-border bg-card/70 sm:h-[180px]">
+          <div
+            className={
+              isPodcastEpisode
+                ? "relative h-[175px] w-full overflow-hidden rounded-xl border border-border bg-card/70"
+                : "relative h-[152px] w-full overflow-hidden rounded-xl border border-border bg-card/70 sm:h-[180px]"
+            }
+          >
             <iframe
               src={appleEmbedUrl}
               title={
                 [title, artist].filter(Boolean).join(" - ") ||
-                "Apple Music player"
+                (isPodcastEpisode
+                  ? "Apple Podcasts player"
+                  : "Apple Music player")
               }
               className="h-full w-full"
               allow="autoplay *; encrypted-media *; fullscreen *; picture-in-picture *"
+              sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
               allowFullScreen
             />
           </div>

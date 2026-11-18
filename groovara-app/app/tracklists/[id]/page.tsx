@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "../../../lib/supabaseClient";
 import { useParams, useRouter } from "next/navigation";
 import UnifiedSearch, { UnifiedSearchResult } from "../../../lib/UnifiedSearch";
+import type { MediaType } from "@/lib/mediaTypes";
 import InlineNotice from "../../../lib/InlineNotice";
 import Image from "next/image";
 import {
@@ -33,7 +34,12 @@ import {
 type Tracklist = {
   id: string;
   title: string;
+  description: string | null;
   finishing_note: string | null;
+  recipient_name: string | null;
+  sender_name: string | null;
+  show_recipient: boolean;
+  show_sender: boolean;
 };
 
 type TrackSong = {
@@ -47,6 +53,7 @@ type TrackSong = {
   isrc: string | null;
   note: string | null;
   platform: string | null;
+  media_type: MediaType;
   track_id: string | null;
 };
 
@@ -72,6 +79,21 @@ const STUDIO_CONVERSION_PLATFORMS: Array<{
   { id: "apple", label: "Apple Music" },
 ];
 
+function getStudioConversionPlatformLabel(
+  platform: ConversionPlatform,
+  mediaType: MediaType,
+): string {
+  if (platform === "apple" && mediaType === "podcast_episode") {
+    return "Apple Podcasts";
+  }
+
+  return (
+    STUDIO_CONVERSION_PLATFORMS.find(
+      (candidate) => candidate.id === platform,
+    )?.label ?? platform
+  );
+}
+
 function getStudioSongPlatform(
   song: TrackSong,
 ): ConversionPlatform | null {
@@ -96,12 +118,31 @@ function getStudioSongPlatform(
 
   if (
     value.includes("music.apple.com") ||
+    value.includes("podcasts.apple.com") ||
     value.includes("itunes.apple.com")
   ) {
     return "apple";
   }
 
   return null;
+}
+
+function inferStudioMediaType(song: TrackSong): MediaType {
+  if (song.media_type === "podcast_episode") {
+    return "podcast_episode";
+  }
+
+  const value = song.url.toLowerCase();
+  if (
+    value.includes("podcasts.apple.com") ||
+    value.includes("open.spotify.com/episode/") ||
+    value.startsWith("spotify:episode:") ||
+    (value.includes("itunes.apple.com") && value.includes("podcast"))
+  ) {
+    return "podcast_episode";
+  }
+
+  return "song";
 }
 
 function getActionError(result: {
@@ -278,8 +319,8 @@ export default function TracklistDetailPage() {
   const [includeSongNotes, setIncludeSongNotes] = useState(true);
   const [mixRecipient, setMixRecipient] = useState("");
   const [mixSender, setMixSender] = useState("");
-  const [showRecipient, setShowRecipient] = useState(false);
-  const [showSender, setShowSender] = useState(false);
+  const [showRecipient, setShowRecipient] = useState(true);
+  const [showSender, setShowSender] = useState(true);
   const [showDate, setShowDate] = useState(true);
   const [allowCopyToStudio, setAllowCopyToStudio] = useState(true);
 
@@ -368,7 +409,7 @@ export default function TracklistDetailPage() {
     const { data, error } = await supabase
       .from("tracklist_songs")
       .select(
-        "id,tracklist_id,position,title,artist,album,url,note,platform,track_id,isrc",
+        "id,tracklist_id,position,title,artist,album,url,note,platform,media_type,track_id,isrc",
       )
       .eq("tracklist_id", id)
       .order("position", { ascending: true });
@@ -380,9 +421,32 @@ export default function TracklistDetailPage() {
       return;
     }
 
-    const list = (data ?? []) as TrackSong[];
+    const rawList = (data ?? []) as TrackSong[];
+    const list = rawList.map((song) => ({
+      ...song,
+      media_type: inferStudioMediaType(song),
+    }));
+
     setSongs(list);
     seedNoteDrafts(list);
+
+    // Repair any copied/legacy rows that arrived with the default "song"
+    // value even though the provider URL clearly identifies a podcast episode.
+    const mediaTypeRepairs = list.filter(
+      (song, index) => song.media_type !== rawList[index]?.media_type,
+    );
+
+    if (mediaTypeRepairs.length > 0) {
+      void Promise.all(
+        mediaTypeRepairs.map((song) =>
+          supabase
+            .from("tracklist_songs")
+            .update({ media_type: song.media_type })
+            .eq("id", song.id)
+            .eq("tracklist_id", id),
+        ),
+      );
+    }
 
     // Compliance refresh: YouTube API Data stored for tracklist songs is
     // refreshed, updated, or marked unavailable after it becomes stale.
@@ -422,7 +486,9 @@ export default function TracklistDetailPage() {
 
       const { data, error } = await supabase
         .from("tracklists")
-        .select("id,title,finishing_note")
+        .select(
+          "id,title,description,finishing_note,recipient_name,sender_name,show_recipient,show_sender",
+        )
         .eq("id", id)
         .single();
 
@@ -435,7 +501,12 @@ export default function TracklistDetailPage() {
       const t = data as Tracklist;
       setItem(t);
       setTitle(t.title);
+      setMixMessage(t.description ?? "");
       setMixFinish(t.finishing_note ?? "");
+      setMixRecipient(t.recipient_name ?? "");
+      setMixSender(t.sender_name ?? "");
+      setShowRecipient(t.show_recipient ?? true);
+      setShowSender(t.show_sender ?? true);
 
       const { data: songData, error: songError } = await supabase
         .from("tracklist_songs")
@@ -486,8 +557,12 @@ export default function TracklistDetailPage() {
     const result = await updateTracklistMetadataAction({
       tracklistId: String(id),
       title,
-      description: null,
+      description: mixMessage,
       finishing_note: mixFinish,
+      recipient_name: mixRecipient,
+      sender_name: mixSender,
+      show_recipient: showRecipient,
+      show_sender: showSender,
     });
 
     if (!result.ok) {
@@ -519,14 +594,25 @@ export default function TracklistDetailPage() {
     }
 
     const trimmed = title.trim();
+    const nextMessage = mixMessage.trim() || null;
     const nextFinishingNote = mixFinish.trim() || null;
+    const nextRecipient = mixRecipient.trim() || null;
+    const nextSender = mixSender.trim() || null;
     setItem({
       ...item,
       title: trimmed,
+      description: nextMessage,
       finishing_note: nextFinishingNote,
+      recipient_name: nextRecipient,
+      sender_name: nextSender,
+      show_recipient: showRecipient,
+      show_sender: showSender,
     });
     setTitle(trimmed);
+    setMixMessage(nextMessage ?? "");
     setMixFinish(nextFinishingNote ?? "");
+    setMixRecipient(nextRecipient ?? "");
+    setMixSender(nextSender ?? "");
     setPageInfo("Draft saved to In Progress.");
     window.setTimeout(() => setPageInfo(null), 1400);
 
@@ -560,6 +646,7 @@ export default function TracklistDetailPage() {
     const result = await addSongToTracklistAction({
       tracklistId: String(id),
       platform: t.platform,
+      media_type: t.media_type,
       track_id: t.track_id,
       title: t.title,
       artist: t.artist,
@@ -716,6 +803,7 @@ export default function TracklistDetailPage() {
           title: song.title,
           artist: song.artist,
           platform: sourcePlatform,
+          media_type: song.media_type ?? "song",
           track_id: song.track_id ?? "",
           url: song.url,
           isrc: song.isrc,
@@ -732,10 +820,10 @@ export default function TracklistDetailPage() {
         !convertedTrackId ||
         !convertedUrl
       ) {
-        const label =
-          STUDIO_CONVERSION_PLATFORMS.find(
-            (platform) => platform.id === targetPlatform,
-          )?.label ?? targetPlatform;
+        const label = getStudioConversionPlatformLabel(
+          targetPlatform,
+          song.media_type ?? "song",
+        );
 
         setPageError(
           `Groovara could not find a ${label} match for “${song.title}”.`,
@@ -747,6 +835,7 @@ export default function TracklistDetailPage() {
         tracklistId: String(id),
         songId: song.id,
         platform: targetPlatform,
+        media_type: song.media_type ?? "song",
         track_id: convertedTrackId,
         url: convertedUrl,
       });
@@ -773,10 +862,10 @@ export default function TracklistDetailPage() {
 
       setConversionMenuSongId(null);
 
-      const label =
-        STUDIO_CONVERSION_PLATFORMS.find(
-          (platform) => platform.id === targetPlatform,
-        )?.label ?? targetPlatform;
+      const label = getStudioConversionPlatformLabel(
+        targetPlatform,
+        song.media_type ?? "song",
+      );
 
       setPageInfo(`Converted “${song.title}” to ${label}.`);
       window.setTimeout(() => setPageInfo(null), 1800);
@@ -959,6 +1048,7 @@ export default function TracklistDetailPage() {
         .map((s, i) => ({
           position: i + 1,
           platform: s.platform ?? "",
+          media_type: s.media_type ?? "song",
           track_id: s.track_id ?? "",
           title: s.title,
           artist: s.artist,
@@ -1079,6 +1169,48 @@ export default function TracklistDetailPage() {
               className="mt-2 w-full rounded-xl border gv-row border-white/10 bg-white/5 px-4 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
             />
           </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs tracking-widest text-gv-accent">
+                TO
+              </label>
+              <input
+                value={mixRecipient}
+                onChange={(e) => setMixRecipient(e.target.value)}
+                maxLength={120}
+                className="mt-2 w-full rounded-xl border gv-row border-white/10 bg-white/5 px-4 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
+                placeholder="Recipient name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs tracking-widest text-gv-accent">
+                FROM
+              </label>
+              <input
+                value={mixSender}
+                onChange={(e) => setMixSender(e.target.value)}
+                maxLength={120}
+                className="mt-2 w-full rounded-xl border gv-row border-white/10 bg-white/5 px-4 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
+                placeholder="Sender name"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs tracking-widest text-gv-accent">
+              OPENING NOTE
+            </label>
+            <textarea
+              value={mixMessage}
+              onChange={(e) => setMixMessage(e.target.value)}
+              maxLength={1000}
+              rows={4}
+              className="mt-2 w-full rounded-xl border gv-row border-white/10 bg-white/5 px-4 py-3 text-gv-accent outline-none focus:border-gv-indigo/40"
+              placeholder="A note they’ll see before the first song..."
+            />
+            <CharacterCounter value={mixMessage} max={1000} />
+          </div>
 
           {pageError && (
             <InlineNotice
@@ -1116,6 +1248,15 @@ export default function TracklistDetailPage() {
               DELETE DRAFT
             </button>
           </div>
+        </div>
+
+        <div className="mx-auto mt-4 max-w-4xl">
+          <UnifiedSearch
+            onAdd={addSong}
+            disabled={busy}
+            uploadTracklistId={String(id)}
+            onRegisterUpload={addUploadedMedia}
+          />
         </div>
 
         <div className="mx-auto mt-12 flex max-w-4xl items-center justify-between">
@@ -1190,15 +1331,6 @@ export default function TracklistDetailPage() {
             </div>
           </div>
         ) : null}
-
-        <div className="mx-auto mt-4 max-w-4xl">
-          <UnifiedSearch
-            onAdd={addSong}
-            disabled={busy}
-            uploadTracklistId={String(id)}
-            onRegisterUpload={addUploadedMedia}
-          />
-        </div>
 
         {DEV_MANUAL_ADD && (
           <div className="mx-auto mt-4 max-w-4xl rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3">
@@ -1352,7 +1484,12 @@ export default function TracklistDetailPage() {
                                     height={24}
                                     className="flex-shrink-0 opacity-80"
                                   />
-                                  <span>{platform.label}</span>
+                                  <span>
+                                    {getStudioConversionPlatformLabel(
+                                      platform.id,
+                                      s.media_type ?? "song",
+                                    )}
+                                  </span>
                                 </button>
                               ))}
                             </div>
@@ -1475,50 +1612,9 @@ export default function TracklistDetailPage() {
             </p>
 
 
-            <div className="mt-4">
-              <label className="block text-xs tracking-widest text-gray-400">
-                OPENING NOTE
-              </label>
-              <textarea
-                value={mixMessage}
-                onChange={(e) => setMixMessage(e.target.value)}
-                maxLength={1000}
-                rows={4}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#1A1A23] outline-none focus:border-gv-indigo/40 dark:text-gray-100"
-                placeholder="A note they’ll see before the first song..."
-              />
-              <CharacterCounter value={mixMessage} max={1000} />
-            </div>
-
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs tracking-widest text-gray-400">
-                  RECIPIENT
-                </label>
-                <input
-                  value={mixRecipient}
-                  onChange={(e) => setMixRecipient(e.target.value)}
-                  maxLength={120}
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#1A1A23] outline-none focus:border-gv-indigo/40 dark:text-gray-100"
-                  placeholder="Recipient name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs tracking-widest text-gray-400">
-                  SENDER
-                </label>
-                <input
-                  value={mixSender}
-                  onChange={(e) => setMixSender(e.target.value)}
-                  maxLength={120}
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-[#1A1A23] outline-none focus:border-gv-indigo/40 dark:text-gray-100"
-                  placeholder="Sender name"
-                />
-              </div>
-
-            </div>
-
+            <label className="mt-4 block text-xs tracking-widest text-gray-400">
+              CLOSING NOTE
+            </label>
             <textarea
               value={mixFinish}
               onChange={(e) => setMixFinish(e.target.value)}

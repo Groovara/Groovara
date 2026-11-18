@@ -24,7 +24,8 @@ const csp = `
     https://youtube.com
     https://www.youtube-nocookie.com
     https://music.apple.com
-    https://embed.music.apple.com;
+    https://embed.music.apple.com
+    https://embed.podcasts.apple.com;
 `.replace(/\s{2,}/g, " ").trim();
 
 const nextConfig: NextConfig = {

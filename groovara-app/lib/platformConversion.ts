@@ -1,9 +1,12 @@
+import type { MediaType } from "@/lib/mediaTypes";
+
 export type Platform = "spotify" | "youtube" | "apple";
 
 export type ConvertibleTrack = {
   title: string;
   artist: string;
   platform: Platform;
+  media_type: MediaType;
   track_id: string;
   url?: string;
   isrc?: string | null;
@@ -58,7 +61,9 @@ function urlMatchesPlatform(
     return (
       host === "music.apple.com" ||
       host.endsWith(".music.apple.com") ||
-      host === "itunes.apple.com"
+      host === "itunes.apple.com" ||
+      host === "podcasts.apple.com" ||
+      host.endsWith(".podcasts.apple.com")
     );
   } catch {
     return false;
@@ -222,6 +227,7 @@ export async function convertTrackPlatform(
       },
       body: JSON.stringify({
         sourcePlatform: track.platform,
+        sourceMediaType: track.media_type,
         sourceUrl: track.url ?? "",
         sourceTitle: track.title,
         sourceArtist: track.artist,
@@ -293,6 +299,7 @@ export async function convertTrackPlatform(
           ? converted.artist
           : track.artist,
       platform: preferredPlatform,
+      media_type: track.media_type,
       track_id:
         typeof converted.track_id === "string"
           ? converted.track_id

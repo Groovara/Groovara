@@ -7,7 +7,7 @@ import Link from "next/link";
 import InlineNotice from "../../../lib/InlineNotice";
 import { supabase } from "../../../lib/supabaseClient";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { convertTrackPlatform } from "@/lib/platformConversion";
+import { convertTrackPlatform, type Platform } from "@/lib/platformConversion";
 import type { MediaType } from "@/lib/mediaTypes";
 import { ensureAppleMusicAuthorized } from "@/lib/appleMusicClient";
 import { copyMixlistToStudioAction } from "./actions";
@@ -414,7 +414,6 @@ export default function MixlistPage() {
 
   const [hasInteracted, setHasInteracted] = useState(false);
 
-  type Platform = "spotify" | "youtube" | "apple";
 
   type ConvertedTrack = {
     title: string;
